@@ -67,7 +67,7 @@ const size_t k=blockIdx.y*blockDim.y+threadIdx.y;
 const size_t ind=k*lb.Nx*lb.Ny+i;
 
 set_value(lb, ind, lb.rho[ind+lb.Nx], 0.0, 0.0, 0.0); 
-set_value(lb, ind+Nxy, lb.rho[ind+Nxy-lb.Ny], 0.0, 0.0, 0.0); 
+set_value(lb, ind+Nxy, lb.rho[ind+Nxy-lb.Nx], 0.0, 0.0, 0.0); 
 }
 
 

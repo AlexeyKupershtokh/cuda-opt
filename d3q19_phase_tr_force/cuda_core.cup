@@ -75,7 +75,7 @@ void cuda_calc(){
 		periodicz(lb); periodicx(lb); // periodicy(lb);
 		CUP FORALL_3DXZ lb lb Nxy lb.Nx*(lb.Ny-1) #
 			set_value(lb, ind, lb.rho[ind+lb.Nx], 0.0, 0.0, 0.0);
-			set_value(lb, ind+Nxy, lb.rho[ind+Nxy-lb.Ny], 0.0, 0.0, 0.0);
+			set_value(lb, ind+Nxy, lb.rho[ind+Nxy-lb.Nx], 0.0, 0.0, 0.0);
 		#
 	
     }
