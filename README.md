@@ -22,8 +22,15 @@ The periodic example uses a 256×256×8 padded lattice, tau 0.6 and effective te
 Compare a candidate library with the corrected archive FP64 library using Python and NumPy.
 
 ```sh
+git worktree add ../cuda-opt-reference 059e107
+cmake -S ../cuda-opt-reference -B reference -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_ARCHITECTURES=86
+cmake --build reference
 python tests/check_phase.py --case periodic --reference reference/d3q19_phase_tr/cuda_core.dll --candidate build/d3q19_phase_tr/cuda_core.dll
 python tests/check_phase.py --case walls --reference reference/d3q19_phase_tr_force/cuda_core.dll --candidate build/d3q19_phase_tr_force/cuda_core.dll
 ```
 
 The check covers all four macroscopic fields at 200, 1000 and 5000 iterations. A zero-error FP64 result must be bitwise equal. Device time is the median of 31 ten-step batches at iterations 1001–1310. Pass `--fp32` for a single-precision candidate and `--output result.json` to save samples and errors.
+
+On RTX 3070 with CUDA 12.6, the final FP64 checkpoint run measured 1.047 ms/step for periodic and 0.375 ms/step for walls. The paired corrected archive reference measured 2.732 and 2.009 ms/step. All four fields matched bitwise at 200, 1000 and 5000 steps.
+
+Additional FP64 checks matched bitwise after 100 steps on a 64×32×7 wall lattice, a 35×19×5 wall lattice, and two logical Z slabs sharing one GPU. The last check exercises decomposition and halo ordering on the available RTX 3070.

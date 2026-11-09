@@ -110,7 +110,7 @@ public:
         if (!(tau > 0)) throw MP_Exeption("D3Q19 tau must be positive");
         const LBE_T omega = 1/tau;
         const bool splitZ = slabs.size() > 1;
-        const bool flat = false;
+        const bool flat = domain.nz == 3;
         for (const auto& s : slabs) {
             check(cudaSetDevice(s->device), "select timing GPU");
             check(cudaEventRecord(s->start,s->stream), "record batch start");
