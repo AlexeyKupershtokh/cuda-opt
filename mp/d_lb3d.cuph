@@ -251,6 +251,7 @@ void rhou2f(d_LB3d & lb){
 #include <mp/phase_fast.cuh>
 
 void transfer(d_LB3d &lb){
+    if (phase_transfer(lb)) return;
 	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f1 # if (i==0) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind-1];} #
 	swap(lb.ftmp, lb.f1);
 

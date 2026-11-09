@@ -1123,6 +1123,7 @@ cudaSetDevice(MP_parallel.GPU_pool[i]);
 #include <mp/phase_fast.cuh>
 
 void transfer(d_LB3d &lb){
+    if (phase_transfer(lb)) return;
 {
 dim3 threads(MP_parallel.Nx, MP_parallel.Ny, MP_parallel.Nz);
 dim3 grid(lb.ftmp.Nx/threads.x, lb.ftmp.Ny/threads.y, ((lb.ftmp.Nz-2)/MP_parallel.GPU_pool.size()+2)/threads.z);
