@@ -25,7 +25,7 @@ __device__ LBE_T drand(int s){
 
 //int a[1]={0};
 //MP_Parallel MP_parallel(a, 1);
-MP_Parallel MP_parallel;
+const MP_Parallel MP_parallel;
 
 
 d_LB3d *lbp;// (Nx, Ny, Nz);
