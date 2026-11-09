@@ -1,0 +1,102 @@
+#include <mp/mp.h>
+#include <mp/lb3d.h>
+#include <mp/d_lb3d.h>
+
+#include "cuda_core.h"
+
+int Nx=128*6;
+int Ny=128*6;
+int Nz=8; 
+
+float LBE_elapsedTime;
+int a[3]={0,1,2};
+MP_Parallel MP_parallel(a, 3);
+
+d_LB3d *lbp;// (Nx, Ny, Nz);
+
+h_Array3d<LBE_T> rho(Nx,Ny,Nz), ux(Nx,Ny,Nz), uy(Nx, Ny, Nz), uz(Nx, Ny, Nz);
+d_Array3d<LBE_T> rho12(Nx,Ny,Nz), ux12(Nx,Ny,Nz), uy12(Nx, Ny, Nz), uz12(Nx, Ny, Nz);
+d_Array3d<LBE_T> rho2(Nx,Ny,Nz), ux2(Nx,Ny,Nz), uy2(Nx, Ny, Nz), uz2(Nx, Ny, Nz), rho_tmp(Nx,Ny,Nz);
+
+CUP INSERT core
+
+void init(){
+    lbp=new d_LB3d(Nx, Ny, Nz);
+    d_LB3d &lb=*lbp;
+    setrhou(lb, 1.0, 0.05, 0.0, 0.0);
+
+	CUP FORALL_3D rho2 rho2 rho_tmp rho_tmp ux2 ux2 uy2 uy2 uz2 uz2 # 
+		rho_tmp[ind]=rho2[ind]=0.0; 
+		ux2[ind]=0.0; 
+		uy2[ind]=0.0; 
+		uz2[ind]=0.0; 
+	#
+
+	CUP FORALL_3D_IJK rho rho2  Nz Nz #
+		LBE_T R0=rho.Nx/7;
+		size_t k1=k+(rho.Nz-2)*gpuIdx;
+		LBE_T R=sqrt(0.0+(i-rho.Nx/2)*(i-rho.Nx/2)+(j-rho.Ny/2)*(j-rho.Ny/2)+(k1-Nz/2)*(k1-Nz/2) ) ; 
+		if( R<R0 ){
+			rho[ind]=1.0;			
+		}		
+		else{
+			rho[ind]=0.0;
+		}
+	#
+
+	for(size_t i=0; i<10; i++){
+		CUP FORALL_3D_IN A rho2 B rho_tmp Nx rho.Nx Ny rho.Ny Nxy rho.Nx*rho.Ny # B[ind]=1.0/6*(A[ind-1]+A[ind+1]+A[ind-Nx]+A[ind+Nx]+A[ind-Nxy]+A[ind+Nxy]); #
+		sync(rho_tmp);
+		periodicz(rho_tmp); periodicx(rho_tmp); periodicy(rho_tmp);
+		CUP FORALL_3D_IN A rho2 B rho_tmp Nx rho.Nx Ny rho.Ny Nxy rho.Nx*rho.Ny # A[ind]=1.0/6*(B[ind-1]+B[ind+1]+B[ind-Nx]+B[ind+Nx]+B[ind-Nxy]+B[ind+Nxy]); #
+		sync(rho2);
+		periodicz(rho2); periodicx(rho2); periodicy(rho2);
+	}
+
+	CUP FORALL_3D lb lb rho2 rho2 #
+		lb.rho[ind]=1.0-rho2[ind]+0.001;
+	#
+  	rhou2f(lb);
+}
+
+void cuda_calc(){
+    d_LB3d &lb=*lbp;
+
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
+    int NN=10;
+    for(int i=0; i<NN; i++){	
+		transfer(lb);
+		f2rhou(lb);
+		sync(lb);
+		CUP FORALL_3D rho rho12 ux ux12 uy uy12 uz uz12 rho1 lb.rho rho2 rho2 ux1 lb.ux uy1 lb.uy uz1 lb.uz ux2 ux2 uy2 uy2 uz2 uz2 # 
+			rho[ind]=rho1[ind]+rho2[ind]; 
+			ux[ind]=(rho1[ind]*ux1[ind]+rho2[ind]*ux2[ind])/rho[ind]; 
+			uy[ind]=(rho1[ind]*uy1[ind]+rho2[ind]*uy2[ind])/rho[ind]; 
+			uz[ind]=(rho1[ind]*uz1[ind]+rho2[ind]*uz2[ind])/rho[ind]; 
+		#
+
+		relax(lb, ux12, uy12, uz12, 0.55);
+		//sync(lb);
+		f2rhou(lb);
+		//sync(lb);
+		force(lb, rho2, -0.05);
+		sync(lb);
+		periodicz(lb); periodicx(lb); periodicy(lb);
+    }
+
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    float elapsedTime_;	
+    cudaEventElapsedTime(&elapsedTime_, start, stop);	
+
+    LBE_elapsedTime=elapsedTime_/(Nx*Ny*Nz*NN)*LBE_ncores*LBE_gpuf*1e-3;
+
+    cpy(rho, lb.rho);
+    cpy(ux, lb.ux);
+    cpy(uy, lb.uy);
+    cpy(uz, lb.uz);
+}
+

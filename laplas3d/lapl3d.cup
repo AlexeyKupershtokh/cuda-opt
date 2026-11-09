@@ -1,0 +1,76 @@
+#include <iostream>
+#include <fstream>
+
+#include <mp/mp.h>
+#include <mp/rdtsc.h>
+#include <mp/d_array3d.h>
+
+const int Nx=256;  // кратно 16
+const int Ny=256;  // кратно 16
+const int Nz=256;  // // Nz-2 кратно количеству GPU
+const int Nxy=Nx*Ny;
+
+using namespace std;
+
+typedef double T;
+#define m 0.16666666666666666666666666666667
+
+int a[3]={0,1,2};   // массив с номерами устройств GPU (device)
+MP_Parallel MP_parallel(a, 3);
+
+// Обрабатывается препроцессором. В этом меcте появятся определения функций
+CUP INSERT lapl3d
+
+int main(){
+	try{	
+	d_Array3d<T> a(Nx, Ny, Nz), tmp(Nx, Ny, Nz);  // Массивы вещественных с распределенем памяти на нескольких GPU
+	
+    // начальные и граничные условия
+	CUP FORALL_3D_IJK a a tmp tmp #
+		const size_t k0=k+gpuIdx*(a.Nz-2);
+		if (i>a.Nx/3 && i < 2*a.Nx/3 && j>a.Ny/3 && j < 2*a.Ny/3 && k0>Nz/3 && k0 < 2*Nz/3)
+			tmp[ind]=a[ind]=k0;
+		else tmp[ind]=a[ind]=0.0;
+	#
+
+	int NN=3;
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start, 0);
+	
+	// итерации
+	for(int i=0; i<NN; i++){
+		CUP FORALL_3D_IN a a tmp tmp # tmp[ind]=m*(a[ind-1]+a[ind+1]+a[ind-Nx]+a[ind+Nx]+a[ind-Nxy]+a[ind+Nxy]); #
+		sync(tmp);
+		swap(a, tmp);	
+	}
+	
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
+	float elapsedTime;
+	cudaEventElapsedTime(&elapsedTime, start, stop);
+
+	elapsedTime=elapsedTime/(( (long long) Nx )*Ny*Nz*NN)*LBE_ncores*LBE_gpuf*1e-3;
+
+	cout << elapsedTime << " GPU ticks\n";
+
+	h_Array3d<T> c(Nx, Ny, Nz);
+	cpy(c,a);
+	{
+		ofstream ofs("1.dat");
+		for (int k=0; k<c.nz(); k++){
+			for (int i=0; i<c.ny(); i++)
+				ofs << c(c.nx()/2,i,k) << '\t';
+			ofs << "\n";
+		}
+	}
+	// array3d2paraview(c, "1.mhd");  // paraview 
+	}
+	catch(MP_Exeption & exept){
+		cout << exept.str;
+	}
+	
+	return 0;
+}
+

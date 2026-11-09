@@ -1,0 +1,586 @@
+#ifndef LBE3D_LB_H_
+#define LBE3D_LB_H_
+
+#include <mp/d_array3d.h>
+#include <mp/lb3d.h>
+
+__device__ __host__ __forceinline__ LBE_T LBE_f0(LBE_T rho, LBE_T   , LBE_T   , LBE_T , LBE_T uu){ return LBE_w0*rho*(1 - LBE_d*uu);}
+__device__ __host__ __forceinline__ LBE_T LBE_f1(LBE_T rho, LBE_T ux, LBE_T   , LBE_T , LBE_T uu){ return LBE_w1*rho*(1 - LBE_d*uu + LBE_a*ux + LBE_b*ux*ux ); }
+__device__ __host__ __forceinline__ LBE_T LBE_f2(LBE_T rho, LBE_T   , LBE_T uy, LBE_T , LBE_T uu){ return LBE_w1*rho*(1 - LBE_d*uu + LBE_a*uy + LBE_b*uy*uy ); }
+__device__ __host__ __forceinline__ LBE_T LBE_f3(LBE_T rho, LBE_T ux, LBE_T   , LBE_T , LBE_T uu){ return LBE_w1*rho*(1 - LBE_d*uu - LBE_a*ux + LBE_b*ux*ux ); }
+__device__ __host__ __forceinline__ LBE_T LBE_f4(LBE_T rho, LBE_T   , LBE_T uy, LBE_T , LBE_T uu){ return LBE_w1*rho*(1 - LBE_d*uu - LBE_a*uy + LBE_b*uy*uy ); }
+__device__ __host__ __forceinline__ LBE_T LBE_f5(LBE_T rho, LBE_T   , LBE_T   , LBE_T uz, LBE_T uu){ return LBE_w1*rho*(1 - LBE_d*uu + LBE_a*uz + LBE_b*uz*uz ); }
+__device__ __host__ __forceinline__ LBE_T LBE_f6(LBE_T rho, LBE_T   , LBE_T   , LBE_T uz, LBE_T uu){ return LBE_w1*rho*(1 - LBE_d*uu - LBE_a*uz + LBE_b*uz*uz ); }
+
+__device__ __host__ __forceinline__ LBE_T LBE_f7(LBE_T rho, LBE_T ux, LBE_T uy, LBE_T   , LBE_T uu){ return LBE_w2*rho*(1 - LBE_d*uu + LBE_a*(ux+uy) + LBE_b*(ux+uy)*(ux+uy) ); }
+__device__ __host__ __forceinline__ LBE_T LBE_f8(LBE_T rho, LBE_T ux, LBE_T uy, LBE_T   , LBE_T uu){ return LBE_w2*rho*(1 - LBE_d*uu - LBE_a*(ux-uy) + LBE_b*(ux-uy)*(ux-uy) ); }
+
+__device__ __host__ __forceinline__ LBE_T LBE_f9(LBE_T rho, LBE_T ux, LBE_T uy, LBE_T   , LBE_T uu){ return LBE_w2*rho*(1 - LBE_d*uu - LBE_a*(ux+uy) + LBE_b*(ux+uy)*(ux+uy) ); }
+__device__ __host__ __forceinline__ LBE_T LBE_f10(LBE_T rho, LBE_T ux, LBE_T uy, LBE_T  , LBE_T uu){ return LBE_w2*rho*(1 - LBE_d*uu + LBE_a*(ux-uy) + LBE_b*(ux-uy)*(ux-uy) ); }
+
+__device__ __host__ __forceinline__ LBE_T LBE_f11(LBE_T rho, LBE_T ux, LBE_T   , LBE_T uz, LBE_T uu){ return LBE_w2*rho*(1 - LBE_d*uu + LBE_a*(ux+uz) + LBE_b*(ux+uz)*(ux+uz)); }
+__device__ __host__ __forceinline__ LBE_T LBE_f12(LBE_T rho, LBE_T   , LBE_T uy, LBE_T uz, LBE_T uu){ return LBE_w2*rho*(1 - LBE_d*uu + LBE_a*(uy+uz) + LBE_b*(uy+uz)*(uy+uz)); }
+
+__device__ __host__ __forceinline__ LBE_T LBE_f13(LBE_T rho, LBE_T ux, LBE_T   , LBE_T uz, LBE_T uu){ return LBE_w2*rho*(1 - LBE_d*uu + LBE_a*(uz-ux) + LBE_b*(uz-ux)*(uz-ux)); }
+__device__ __host__ __forceinline__ LBE_T LBE_f14(LBE_T rho, LBE_T   , LBE_T uy, LBE_T uz, LBE_T uu){ return LBE_w2*rho*(1 - LBE_d*uu + LBE_a*(uz-uy) + LBE_b*(uz-uy)*(uz-uy)); }
+
+__device__ __host__ __forceinline__ LBE_T LBE_f15(LBE_T rho, LBE_T ux, LBE_T   , LBE_T uz, LBE_T uu){ return LBE_w2*rho*(1 - LBE_d*uu - LBE_a*(uz-ux) + LBE_b*(uz-ux)*(uz-ux)); }
+__device__ __host__ __forceinline__ LBE_T LBE_f16(LBE_T rho, LBE_T   , LBE_T uy, LBE_T uz, LBE_T uu){ return LBE_w2*rho*(1 - LBE_d*uu - LBE_a*(uz-uy) + LBE_b*(uz-uy)*(uz-uy)); }
+
+__device__ __host__ __forceinline__ LBE_T LBE_f17(LBE_T rho, LBE_T ux, LBE_T   , LBE_T uz, LBE_T uu){ return LBE_w2*rho*(1 - LBE_d*uu - LBE_a*(uz+ux) + LBE_b*(uz+ux)*(uz+ux)); }
+__device__ __host__ __forceinline__ LBE_T LBE_f18(LBE_T rho, LBE_T   , LBE_T uy, LBE_T uz, LBE_T uu){ return LBE_w2*rho*(1 - LBE_d*uu - LBE_a*(uz+uy) + LBE_b*(uz+uy)*(uz+uy)); }
+
+class d_LB3d_base{
+public:	
+	size_t Nx, Ny, Nz;
+	d_Array3d_base<LBE_T> rho, ux, uy, uz;	
+	d_Array3d_base<LBE_T> f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f1u, f2u, f3u, f4u, f1d, f2d, f3d, f4d;	
+	d_Array3d_base<LBE_T> ftmp;
+	d_LB3d_base(size_t Nx, size_t Ny, size_t Nz): Nx(Nx), Ny(Ny), Nz(Nz), rho(Nx, Ny, Nz), ux(Nx, Ny, Nz), uy(Nx, Ny, Nz), uz(Nx, Ny, Nz), f0(Nx, Ny, Nz), f1(Nx, Ny, Nz), f2(Nx, Ny, Nz), f3(Nx, Ny, Nz), f4(Nx, Ny, Nz), f5(Nx, Ny, Nz), f6(Nx, Ny, Nz), f7(Nx, Ny, Nz), f8(Nx, Ny, Nz), f9(Nx, Ny, Nz), f10(Nx, Ny, Nz), f1u(Nx, Ny, Nz), f2u(Nx, Ny, Nz), f3u(Nx, Ny, Nz), f4u(Nx, Ny, Nz), f1d(Nx, Ny, Nz), f2d(Nx, Ny, Nz), f3d(Nx, Ny, Nz), f4d(Nx, Ny, Nz), ftmp(Nx, Ny, Nz){}
+	d_LB3d_base(){}
+	inline __host__ __device__ size_t nx()const{return Nx;}
+	inline __host__ __device__ size_t ny()const{return Ny;}
+	inline __host__ __device__ size_t nz()const{return Nz;}
+};
+
+class d_LB3d{
+public:	
+	size_t Nx, Ny, Nz;
+	d_Array3d<LBE_T> rho, ux, uy, uz;
+	d_Array3d<LBE_T> f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f1u, f2u, f3u, f4u, f1d, f2d, f3d, f4d;
+	d_Array3d<LBE_T> ftmp;
+	d_LB3d(int Nx, int Ny, int Nz): Nx(Nx), Ny(Ny), Nz(Nz), rho(Nx, Ny, Nz), ux(Nx, Ny, Nz), uy(Nx, Ny, Nz), uz(Nx, Ny, Nz), f0(Nx, Ny, Nz), f1(Nx, Ny, Nz), f2(Nx, Ny, Nz), f3(Nx, Ny, Nz), f4(Nx, Ny, Nz), f5(Nx, Ny, Nz), f6(Nx, Ny, Nz), f7(Nx, Ny, Nz), f8(Nx, Ny, Nz), f9(Nx, Ny, Nz), f10(Nx, Ny, Nz), f1u(Nx, Ny, Nz), f2u(Nx, Ny, Nz), f3u(Nx, Ny, Nz), f4u(Nx, Ny, Nz), f1d(Nx, Ny, Nz), f2d(Nx, Ny, Nz), f3d(Nx, Ny, Nz), f4d(Nx, Ny, Nz), ftmp(Nx, Ny, Nz){}	
+	inline __host__ __device__ size_t nx()const{return Nx;}
+	inline __host__ __device__ size_t ny()const{return Ny;}
+	inline __host__ __device__ size_t nz()const{return Nz;}
+	void free(){
+		f0.free();
+		f1.free();
+		f2.free();
+		f3.free();
+		f4.free();
+		f5.free();
+		f6.free();
+		f7.free();
+		f8.free();
+		f9.free();
+		f10.free();
+		f1u.free();
+		f2u.free();
+		f3u.free();
+		f4u.free();
+		f1d.free();
+		f2d.free();
+		f3d.free();
+		f4d.free();
+		ftmp.free();
+	}
+};
+
+
+d_LB3d_base split(size_t i, d_LB3d & a){
+	d_LB3d_base tmp;
+	tmp.rho=split(i, a.rho);
+	tmp.ux=split(i, a.ux);
+	tmp.uy=split(i, a.uy);
+	tmp.uz=split(i, a.uz);
+	tmp.f0=split(i, a.f0); 
+	tmp.f1=split(i, a.f1); 
+	tmp.f2=split(i, a.f2); 
+	tmp.f3=split(i, a.f3); 
+	tmp.f4=split(i, a.f4); 
+	tmp.f5=split(i, a.f5); 
+	tmp.f6=split(i, a.f6); 
+	tmp.f7=split(i, a.f7); 
+	tmp.f8=split(i, a.f8); 
+	tmp.f9=split(i, a.f9);
+	tmp.f10=split(i, a.f10);
+	tmp.f1u=split(i, a.f1u);
+	tmp.f2u=split(i, a.f2u);
+	tmp.f3u=split(i, a.f3u);
+	tmp.f4u=split(i, a.f4u);
+	tmp.f1d=split(i, a.f1d);
+	tmp.f2d=split(i, a.f2d);
+	tmp.f3d=split(i, a.f3d);
+	tmp.f4d=split(i, a.f4d);	
+	tmp.ftmp=split(i, a.ftmp);		
+	tmp.Nx=a.Nx;
+	tmp.Ny=a.Ny;
+	tmp.Nz=(a.Nz-2)/MP_parallel.GPU_pool.size()+2;
+	return tmp;
+}
+
+void sync(d_LB3d & a){
+	sync(a.rho);
+	sync(a.ux);
+	sync(a.uy);
+	sync(a.uz);
+	sync(a.f0);
+	sync(a.f1);
+	sync(a.f2);
+	sync(a.f3);
+	sync(a.f4);
+	sync(a.f5);
+	sync(a.f6);
+	sync(a.f7);
+	sync(a.f8);
+	sync(a.f9);
+	sync(a.f10);
+	sync(a.f1u);
+	sync(a.f2u);
+	sync(a.f3u);
+	sync(a.f4u);
+	sync(a.f1d);
+	sync(a.f2d);
+	sync(a.f3d);
+	sync(a.f4d);
+	//sync(a.ftmp);	
+}
+
+__device__ void set_value(d_LB3d_base &lb, size_t ind, LBE_T rho, LBE_T ux, LBE_T uy, LBE_T uz){
+	LBE_T uu=ux*ux+uy*uy+uz*uz;
+	lb.f0[ind] =LBE_f0( rho, ux, uy ,uz, uu);
+	lb.f1[ind] =LBE_f1( rho, ux, uy ,uz, uu);
+	lb.f2[ind] =LBE_f2( rho, ux, uy ,uz, uu);
+	lb.f3[ind] =LBE_f3( rho, ux, uy ,uz, uu);
+	lb.f4[ind] =LBE_f4( rho, ux, uy ,uz, uu);
+	lb.f5[ind] =LBE_f5( rho, ux, uy ,uz, uu);
+	lb.f6[ind] =LBE_f6( rho, ux, uy ,uz, uu);
+	lb.f7[ind] =LBE_f7( rho, ux, uy ,uz, uu);
+	lb.f8[ind] =LBE_f8( rho, ux, uy ,uz, uu);
+	lb.f9[ind] =LBE_f9( rho, ux, uy ,uz, uu);
+	lb.f10[ind]=LBE_f10(rho, ux, uy ,uz, uu);
+	lb.f1u[ind]=LBE_f11(rho, ux, uy ,uz, uu);
+	lb.f2u[ind]=LBE_f12(rho, ux, uy ,uz, uu);
+	lb.f3u[ind]=LBE_f13(rho, ux, uy ,uz, uu);
+	lb.f4u[ind]=LBE_f14(rho, ux, uy ,uz, uu);
+	lb.f1d[ind]=LBE_f15(rho, ux, uy ,uz, uu);
+	lb.f2d[ind]=LBE_f16(rho, ux, uy ,uz, uu);
+	lb.f3d[ind]=LBE_f17(rho, ux, uy ,uz, uu);
+	lb.f4d[ind]=LBE_f18(rho, ux, uy ,uz, uu);		
+}
+
+CUP INSERT d_lb3d
+
+void setrhou(d_LB3d & lb, LBE_T rho=1.0, LBE_T ux=0.0, LBE_T uy=0.0, LBE_T uz=0.0){
+	CUP FORALL_3D  lb lb rho rho # lb.rho[ind]=rho; #
+	CUP FORALL_3D  lb lb ux  ux  # lb.ux [ind]=ux; #
+	CUP FORALL_3D  lb lb uy  uy  # lb.uy [ind]=uy; #
+	CUP FORALL_3D  lb lb uz  uz  # lb.uz [ind]=uz; #
+}
+
+void rhou2f(d_LB3d & lb){
+	CUP FORALL_3D f lb.f0  rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f0(rho[ind],  ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f1  rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f1(rho[ind],  ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f2  rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f2(rho[ind],  ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f3  rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f3(rho[ind],  ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f4  rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f4(rho[ind],  ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f5  rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f5(rho[ind],  ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f6  rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f6(rho[ind],  ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f7  rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f7(rho[ind],  ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f8  rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f8(rho[ind],  ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f9  rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f9(rho[ind],  ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f10 rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f10(rho[ind], ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f1u rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f11(rho[ind], ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f2u rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f12(rho[ind], ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f3u rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f13(rho[ind], ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f4u rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f14(rho[ind], ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f1d rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f15(rho[ind], ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f2d rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f16(rho[ind], ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f3d rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f17(rho[ind], ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+	CUP FORALL_3D f lb.f4d rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f18(rho[ind], ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
+}
+
+void transfer(d_LB3d &lb){
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f1 # if (i==0) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind-1];} #
+	swap(lb.ftmp, lb.f1);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f2 # if (j==0) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind-ftmp.Nx];} #
+	swap(lb.ftmp, lb.f2);
+	
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f3 # if (i == (ftmp.Nx-1) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind+1];} #
+	swap(lb.ftmp, lb.f3);
+	
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f4 # if (j == (ftmp.Ny-1) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind+ftmp.Nx];} #
+	swap(lb.ftmp, lb.f4);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f5 # if (k == 0 ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind-ftmp.Nx*ftmp.Ny];} #
+	swap(lb.ftmp, lb.f5);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f6 # if (k == (ftmp.Nz-1) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind+ftmp.Nx*ftmp.Ny];} #
+	swap(lb.ftmp, lb.f6);
+	
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f7 # if ( (j == 0) || (i == 0) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind-ftmp.Nx-1];} #
+	swap(lb.ftmp, lb.f7);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f8 # if ((i == (ftmp.Nx-1)) || (j == 0) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind-ftmp.Nx+1];} #
+	swap(lb.ftmp, lb.f8);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f9 # if ((i == (ftmp.Nx-1) ) || (j == ftmp.Ny-1 )) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind+ftmp.Nx+1];} #
+	swap(lb.ftmp, lb.f9);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f10 # if ( (i == 0 ) || ( j == ftmp.Ny-1 ) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind+ftmp.Nx-1];} #
+	swap(lb.ftmp, lb.f10);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f1u # if ( ( k == 0 ) || ( i == 0 ) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind-ftmp.Nx*ftmp.Ny-1];} #
+	swap(lb.ftmp, lb.f1u);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f2u # if ( (k == 0) || (j == 0) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind-ftmp.Nx*ftmp.Ny-ftmp.Nx];} #
+	swap(lb.ftmp, lb.f2u);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f3u # if ( (k == 0) || (i == ftmp.Nx-1) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind-ftmp.Nx*ftmp.Ny+1];} #
+	swap(lb.ftmp, lb.f3u);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f4u # if ( (k == 0) || (j == ftmp.Ny-1) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind-ftmp.Nx*ftmp.Ny+ftmp.Nx];} #
+	swap(lb.ftmp, lb.f4u);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f1d # if ( (i == 0) || (k == (ftmp.Nz-1)) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind+ftmp.Nx*ftmp.Ny-1];} #
+	swap(lb.ftmp, lb.f1d);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f2d # if ( (j == 0) || (k == (ftmp.Nz-1)) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind+ftmp.Nx*(ftmp.Ny-1)];} #
+	swap(lb.ftmp, lb.f2d);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f3d # if ( (i == (ftmp.Nx-1)) || (k == (ftmp.Nz-1)) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind+ftmp.Nx*ftmp.Ny+1];} #
+	swap(lb.ftmp, lb.f3d);
+
+	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f4d # if ( (j == (ftmp.Ny-1)) || (k == (ftmp.Nz-1)) ) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind+ftmp.Nx*(ftmp.Ny+1)];} #
+	swap(lb.ftmp, lb.f4d);
+}
+
+
+void periodicx(d_LB3d & lb){
+	CUP FORALL_3DYZ  lb lb #  
+		const size_t n1=ind+lb.Nx-2;
+	 	const size_t n2=ind+lb.Nx-1;
+		const size_t n3=ind+1;	
+		lb.rho[ind]=lb.rho[n1]; lb.rho[n2]=lb.rho[n3];	
+		lb.ux [ind]=lb.ux [n1]; lb.ux [n2]=lb.ux [n3];	
+		lb.uy [ind]=lb.uy [n1]; lb.uy [n2]=lb.uy [n3];	
+		lb.uz [ind]=lb.uz [n1]; lb.uz [n2]=lb.uz [n3];	
+		lb.f1 [ind]=lb.f1 [n1]; lb.f3 [n2]=lb.f3 [n3];	
+		lb.f7 [ind]=lb.f7 [n1]; lb.f8 [n2]=lb.f8 [n3];
+		lb.f10[ind]=lb.f10[n1];	lb.f9 [n2]=lb.f9 [n3];
+		lb.f1u[ind]=lb.f1u[n1];	lb.f3u[n2]=lb.f3u[n3];
+		lb.f1d[ind]=lb.f1d[n1];	lb.f3d[n2]=lb.f3d[n3];	
+	#		
+}
+
+void periodicy(d_LB3d & lb){
+	CUP FORALL_3DXZ  lb lb # 
+		const size_t n1=ind+lb.Nx*(lb.Ny-2);
+		const size_t n2=ind+lb.Nx*(lb.Ny-1);  
+		const size_t n3=ind+lb.Nx;	
+		lb.rho[ind]=lb.rho[n1]; lb.rho[n2]=lb.rho[n3];	
+		lb.ux[ind]=lb.ux[n1];   lb.ux[n2]=lb.ux[n3];
+		lb.uy[ind]=lb.uy[n1];   lb.uy[n2]=lb.uy[n3];
+		lb.uz[ind]=lb.uz[n1];   lb.uz[n2]=lb.uz[n3];
+		lb.f2[ind]=lb.f2[n1];	lb.f4[n2]=lb.f4[n3];
+		lb.f7[ind]=lb.f7[n1];	lb.f9[n2]=lb.f9[n3];
+		lb.f8[ind]=lb.f8[n1];	lb.f10[n2]=lb.f10[n3];
+		lb.f2u[ind]=lb.f2u[n1];	lb.f4u[n2]=lb.f4u[n3];
+		lb.f2d[ind]=lb.f2d[n1];	lb.f4d[n2]=lb.f4d[n3]; 
+	#
+}	
+
+void periodicz(d_LB3d & lb){
+	periodicz(lb.rho);
+	periodicz(lb.ux);
+	periodicz(lb.uy);
+	periodicz(lb.uz);
+
+	periodicz(lb.f5);
+	periodicz(lb.f1u);
+	periodicz(lb.f2u);	
+	periodicz(lb.f3u);
+	periodicz(lb.f4u);
+
+	periodicz(lb.f6);
+	periodicz(lb.f1d);
+	periodicz(lb.f2d);
+	periodicz(lb.f3d);
+	periodicz(lb.f4d);
+
+}
+
+
+void f2rhou(d_LB3d & lb){
+	CUP FORALL_3D lb lb # 
+		lb.rho[ind]=lb.f0[ind]+lb.f1[ind]+lb.f2[ind]+lb.f3[ind]+lb.f4[ind]+lb.f5[ind]+lb.f6[ind]+lb.f7[ind]+lb.f8[ind]+lb.f9[ind]+lb.f10[ind]+lb.f1u[ind]+lb.f2u[ind]+lb.f3u[ind]+lb.f4u[ind]+lb.f1d[ind]+lb.f2d[ind]+lb.f3d[ind]+lb.f4d[ind]; 
+		lb.ux[ind]=(lb.f1[ind]-lb.f3[ind]+lb.f7[ind]-lb.f8[ind]-lb.f9[ind]+lb.f10[ind]+lb.f1u[ind]-lb.f3u[ind]+lb.f1d[ind]-lb.f3d[ind])/lb.rho[ind]; 
+		lb.uy[ind]=(lb.f2[ind]-lb.f4[ind]+lb.f7[ind]+lb.f8[ind]-lb.f9[ind]-lb.f10[ind]+lb.f2u[ind]-lb.f4u[ind]+lb.f2d[ind]-lb.f4d[ind])/lb.rho[ind]; 
+		lb.uz[ind]=(lb.f5[ind]-lb.f6[ind]+lb.f1u[ind]+lb.f2u[ind]+lb.f3u[ind]+lb.f4u[ind]-lb.f1d[ind]-lb.f2d[ind]-lb.f3d[ind]-lb.f4d[ind])/lb.rho[ind]; 
+	#
+}
+
+
+void relax(d_LB3d &lb, d_Array3d<LBE_T> &ux_, d_Array3d<LBE_T>  &uy_, d_Array3d<LBE_T>  &uz_, LBE_T tau){
+	const LBE_T taurev=1.0/tau;
+	CUP FORALL_3D lb lb ux_ ux_ uy_ uy_ uz_ uz_ taurev taurev #  	
+	const LBE_T rho=lb.rho[ind], ux=ux_[ind], uy=uy_[ind], uz=uz_[ind];	const LBE_T uu=ux*ux+uy*uy+uz*uz;	const LBE_T duu=1.0-LBE_d*uu;
+	LBE_T mult=LBE_w0*rho;
+	lb.f0[ind]+=(mult*(duu) - lb.f0[ind])*taurev; 	
+	mult=LBE_w1*rho;
+	lb.f1[ind]+=(mult*(duu + LBE_a*ux + LBE_b*ux*ux)-lb.f1[ind])*taurev;	
+	lb.f2[ind]+=(mult*(duu + LBE_a*uy + LBE_b*uy*uy)-lb.f2[ind])*taurev;	
+	lb.f3[ind]+=(mult*(duu - LBE_a*ux + LBE_b*ux*ux)-lb.f3[ind])*taurev;	
+	lb.f4[ind]+=(mult*(duu - LBE_a*uy + LBE_b*uy*uy)-lb.f4[ind])*taurev;	
+	lb.f5[ind]+=(mult*(duu + LBE_a*uz + LBE_b*uz*uz)-lb.f5[ind])*taurev;	
+	lb.f6[ind]+=(mult*(duu - LBE_a*uz + LBE_b*uz*uz)-lb.f6[ind])*taurev;	
+	const LBE_T uxuy=ux+uy, ux_uy=ux-uy;	
+	mult=LBE_w2*rho;
+	lb.f7[ind] +=(mult*(duu + LBE_a*uxuy  + LBE_b*uxuy*uxuy)  -lb.f7[ind])*taurev;	
+	lb.f8[ind] +=(mult*(duu - LBE_a*ux_uy + LBE_b*ux_uy*ux_uy)-lb.f8[ind])*taurev;	
+	lb.f9[ind] +=(mult*(duu - LBE_a*uxuy  + LBE_b*uxuy*uxuy)  -lb.f9[ind])*taurev;	
+	lb.f10[ind]+=(mult*(duu + LBE_a*ux_uy + LBE_b*ux_uy*ux_uy)-lb.f10[ind])*taurev;	
+	const LBE_T uzux=uz+ux, uz_ux=uz-ux, uzuy=uz+uy, uz_uy=uz-uy;	
+	lb.f1u[ind] +=(mult*(duu + LBE_a*uzux + LBE_b*uzux*uzux)  -lb.f1u[ind])*taurev;	
+	lb.f2u[ind] +=(mult*(duu + LBE_a*uzuy + LBE_b*uzuy*uzuy)  -lb.f2u[ind])*taurev;	
+	lb.f3u[ind] +=(mult*(duu + LBE_a*uz_ux+ LBE_b*uz_ux*uz_ux)-lb.f3u[ind])*taurev;	
+	lb.f4u[ind] +=(mult*(duu + LBE_a*uz_uy+ LBE_b*uz_uy*uz_uy)-lb.f4u[ind])*taurev; 
+	lb.f1d[ind] +=(mult*(duu - LBE_a*uz_ux+ LBE_b*uz_ux*uz_ux) -lb.f1d[ind])*taurev;	
+	lb.f2d[ind] +=(mult*(duu - LBE_a*uz_uy+ LBE_b*uz_uy*uz_uy)-lb.f2d[ind])*taurev;	
+	lb.f3d[ind] +=(mult*(duu - LBE_a*uzux + LBE_b*uzux*uzux)  -lb.f3d[ind])*taurev; 	
+	lb.f4d[ind] +=(mult*(duu - LBE_a*uzuy + LBE_b*uzuy*uzuy)  -lb.f4d[ind])*taurev; 
+	#
+}
+
+void relax(d_LB3d &lb, LBE_T tau){
+	relax(lb, lb.ux, lb.uy, lb.uz, tau);
+}
+
+// __device__ LBE_T fpsi(LBE_T rho, LBE_T T){ if (rho<0)return 0; return sqrt(rho*(1.0/3.0-T));}
+__device__ LBE_T fpsi(LBE_T rho, LBE_T T){ return sqrt(fabs((rho*(1.0/3.0-T))));}
+
+void force(d_LB3d &lb, LBE_T T){
+	CUP FORALL_3D_IN lb lb T T #
+	const LBE_T rho=lb.rho[ind], ux=lb.ux[ind], uy=lb.uy[ind], uz=lb.uz[ind];
+	const LBE_T uu=ux*ux+uy*uy+uz*uz;	const LBE_T duu=1.0-LBE_d*uu;
+ 	
+	LBE_T ux_=0.5*(fpsi(lb.rho[ind+1], T)-fpsi(lb.rho[ind-1],T));
+	LBE_T uy_=0.5*(fpsi(lb.rho[ind+lb.Nx],T)-fpsi(lb.rho[ind-lb.Nx],T));
+	LBE_T uz_=0.5*(fpsi(lb.rho[ind+lb.Nx*lb.Ny],T)-fpsi(lb.rho[ind-lb.Nx*lb.Ny],T));
+ 
+	LBE_T tmp=fpsi(lb.rho[ind+lb.Nx*lb.Ny+1],T)-fpsi(lb.rho[ind-lb.Nx*lb.Ny-1],T); 
+	ux_+=tmp; uz_+=tmp;
+	tmp=fpsi(lb.rho[ind+lb.Nx*lb.Ny-1],T) - fpsi(lb.rho[ind-lb.Nx*lb.Ny+1],T);
+	ux_-=tmp; uz_+=tmp;
+	tmp=fpsi(lb.rho[ind+lb.Nx+1],T)-fpsi(lb.rho[ind-lb.Nx-1],T);
+	ux_+=tmp; uy_+=tmp;
+	tmp=fpsi(lb.rho[ind-lb.Nx+1],T)-fpsi(lb.rho[ind+lb.Nx-1],T);
+	ux_+=tmp; uy_-=tmp;
+	tmp=fpsi(lb.rho[ind+lb.Nx*lb.Ny+lb.Nx],T)-fpsi(lb.rho[ind-lb.Nx*lb.Ny-lb.Nx],T);  
+	uy_+=tmp; uz_+=tmp;
+	tmp=fpsi(lb.rho[ind-lb.Nx*lb.Ny+lb.Nx],T) -fpsi(lb.rho[ind+lb.Nx*lb.Ny-lb.Nx],T);
+	uy_+=tmp; uz_-=tmp;
+	
+	ux_=ux+0.5*ux_*fpsi(rho,T)/rho;
+	uy_=uy+0.5*uy_*fpsi(rho,T)/rho;
+	uz_=uz+0.5*uz_*fpsi(rho,T)/rho;
+
+	const LBE_T uu_=ux_*ux_+uy_*uy_+uz_*uz_;	const LBE_T duu_=1.0-LBE_d*uu_; 	
+
+	lb.f0[ind]+=LBE_w0*rho*(duu_ - duu); 	
+	lb.f1[ind]+=LBE_w1*rho*(duu_ + LBE_a*ux_ + LBE_b*ux_*ux_ - (duu + LBE_a*ux + LBE_b*ux*ux));	
+	lb.f2[ind]+=LBE_w1*rho*(duu_ + LBE_a*uy_ + LBE_b*uy_*uy_ - (duu + LBE_a*uy + LBE_b*uy*uy));	
+	lb.f3[ind]+=LBE_w1*rho*(duu_ - LBE_a*ux_ + LBE_b*ux_*ux_ - (duu - LBE_a*ux + LBE_b*ux*ux));	
+	lb.f4[ind]+=LBE_w1*rho*(duu_ - LBE_a*uy_ + LBE_b*uy_*uy_ - (duu - LBE_a*uy + LBE_b*uy*uy));	
+	lb.f5[ind]+=LBE_w1*rho*(duu_ + LBE_a*uz_ + LBE_b*uz_*uz_ - (duu + LBE_a*uz + LBE_b*uz*uz));	
+	lb.f6[ind]+=LBE_w1*rho*(duu_ - LBE_a*uz_ + LBE_b*uz_*uz_ - (duu - LBE_a*uz + LBE_b*uz*uz));	
+	const LBE_T uxuy=ux+uy, ux_uy=ux-uy;
+	const LBE_T uxuy_=ux_+uy_, ux_uy_=ux_-uy_;
+	lb.f7[ind] +=LBE_w2*rho*(duu_ + LBE_a*uxuy_  + LBE_b*uxuy_*uxuy_  - (duu + LBE_a*uxuy  + LBE_b*uxuy*uxuy));	
+	lb.f8[ind] +=LBE_w2*rho*(duu_ - LBE_a*ux_uy_ + LBE_b*ux_uy_*ux_uy_- (duu - LBE_a*ux_uy + LBE_b*ux_uy*ux_uy));	
+	lb.f9[ind] +=LBE_w2*rho*(duu_ - LBE_a*uxuy_  + LBE_b*uxuy_*uxuy_  - (duu - LBE_a*uxuy  + LBE_b*uxuy*uxuy));	
+	lb.f10[ind]+=LBE_w2*rho*(duu_ + LBE_a*ux_uy_ + LBE_b*ux_uy_*ux_uy_- (duu + LBE_a*ux_uy + LBE_b*ux_uy*ux_uy));	
+	const LBE_T uzux=uz+ux, uz_ux=uz-ux, uzuy=uz+uy, uz_uy=uz-uy;
+	const LBE_T uzux_=uz_+ux_, uz_ux_=uz_-ux_, uzuy_=uz_+uy_, uz_uy_=uz_-uy_;
+	lb.f1u[ind] +=LBE_w2*rho*(duu_ + LBE_a*uzux_ + LBE_b*uzux_*uzux_  - (duu + LBE_a*uzux + LBE_b*uzux*uzux));	
+	lb.f2u[ind] +=LBE_w2*rho*(duu_ + LBE_a*uzuy_ + LBE_b*uzuy_*uzuy_  - (duu + LBE_a*uzuy + LBE_b*uzuy*uzuy));	
+	lb.f3u[ind] +=LBE_w2*rho*(duu_ + LBE_a*uz_ux_+ LBE_b*uz_ux_*uz_ux_- (duu + LBE_a*uz_ux+ LBE_b*uz_ux*uz_ux));	
+	lb.f4u[ind] +=LBE_w2*rho*(duu_ + LBE_a*uz_uy_+ LBE_b*uz_uy_*uz_uy_- (duu + LBE_a*uz_uy+ LBE_b*uz_uy*uz_uy)); 
+	lb.f1d[ind] +=LBE_w2*rho*(duu_ - LBE_a*uz_ux_+ LBE_b*uz_ux_*uz_ux_- (duu - LBE_a*uz_ux+ LBE_b*uz_ux*uz_ux));	
+	lb.f2d[ind] +=LBE_w2*rho*(duu_ - LBE_a*uz_uy_+ LBE_b*uz_uy_*uz_uy_- (duu - LBE_a*uz_uy+ LBE_b*uz_uy*uz_uy));	
+	lb.f3d[ind] +=LBE_w2*rho*(duu_ - LBE_a*uzux_ + LBE_b*uzux_*uzux_  - (duu - LBE_a*uzux + LBE_b*uzux*uzux)); 	
+	lb.f4d[ind] +=LBE_w2*rho*(duu_ - LBE_a*uzuy_ + LBE_b*uzuy_*uzuy_  - (duu - LBE_a*uzuy + LBE_b*uzuy*uzuy)); 
+	#
+}
+
+void forcepsi(d_LB3d &lb, d_Array3d<LBE_T>  &psi, LBE_T G=1.0){
+	CUP FORALL_3D_IN lb lb psi psi G G #
+		const LBE_T rho=lb.rho[ind], ux=lb.ux[ind], uy=lb.uy[ind], uz=lb.uz[ind];
+		const LBE_T uu=ux*ux+uy*uy+uz*uz;	const LBE_T duu=1.0-LBE_d*uu;
+ 	
+		LBE_T ux_=(psi[ind+1]-psi[ind-1]);
+		LBE_T uy_=(psi[ind+lb.Nx]-psi[ind-lb.Nx]);
+		LBE_T uz_=(psi[ind+lb.Nx*lb.Ny]-psi[ind-lb.Nx*lb.Ny]);
+ 
+		LBE_T tmp=0.5*(psi[ind+lb.Nx*lb.Ny+1]-psi[ind-lb.Nx*lb.Ny-1]); 
+		ux_+=tmp; uz_+=tmp;
+		tmp=0.5*(psi[ind+lb.Nx*lb.Ny-1] - psi[ind-lb.Nx*lb.Ny+1]);
+		ux_-=tmp; uz_+=tmp;
+		tmp=0.5*(psi[ind+lb.Nx+1]-psi[ind-lb.Nx-1]);
+		ux_+=tmp; uy_+=tmp;
+		tmp=0.5*(psi[ind-lb.Nx+1]-psi[ind+lb.Nx-1]);
+		ux_+=tmp; uy_-=tmp;
+		tmp=0.5*(psi[ind+lb.Nx*lb.Ny+lb.Nx]-psi[ind-lb.Nx*lb.Ny-lb.Nx]);  
+		uy_+=tmp; uz_+=tmp;
+		tmp=0.5*(psi[ind-lb.Nx*lb.Ny+lb.Nx] -psi[ind+lb.Nx*lb.Ny-lb.Nx]);
+		uy_+=tmp; uz_-=tmp;
+	
+		ux_=ux+G*ux_*psi[ind]/(rho*3);
+		uy_=uy+G*uy_*psi[ind]/(rho*3);
+		uz_=uz+G*uz_*psi[ind]/(rho*3);
+
+		const LBE_T uu_=ux_*ux_+uy_*uy_+uz_*uz_;	const LBE_T duu_=1.0-LBE_d*uu_; 	
+	
+		lb.f0[ind]+=LBE_w0*rho*(duu_ - duu); 	
+		lb.f1[ind]+=LBE_w1*rho*(duu_ + LBE_a*ux_ + LBE_b*ux_*ux_ - (duu + LBE_a*ux + LBE_b*ux*ux));	
+		lb.f2[ind]+=LBE_w1*rho*(duu_ + LBE_a*uy_ + LBE_b*uy_*uy_ - (duu + LBE_a*uy + LBE_b*uy*uy));	
+		lb.f3[ind]+=LBE_w1*rho*(duu_ - LBE_a*ux_ + LBE_b*ux_*ux_ - (duu - LBE_a*ux + LBE_b*ux*ux));	
+		lb.f4[ind]+=LBE_w1*rho*(duu_ - LBE_a*uy_ + LBE_b*uy_*uy_ - (duu - LBE_a*uy + LBE_b*uy*uy));	
+		lb.f5[ind]+=LBE_w1*rho*(duu_ + LBE_a*uz_ + LBE_b*uz_*uz_ - (duu + LBE_a*uz + LBE_b*uz*uz));	
+		lb.f6[ind]+=LBE_w1*rho*(duu_ - LBE_a*uz_ + LBE_b*uz_*uz_ - (duu - LBE_a*uz + LBE_b*uz*uz));	
+		const LBE_T uxuy=ux+uy, ux_uy=ux-uy;
+		const LBE_T uxuy_=ux_+uy_, ux_uy_=ux_-uy_;
+		lb.f7[ind] +=LBE_w2*rho*(duu_ + LBE_a*uxuy_  + LBE_b*uxuy_*uxuy_  - (duu + LBE_a*uxuy  + LBE_b*uxuy*uxuy));	
+		lb.f8[ind] +=LBE_w2*rho*(duu_ - LBE_a*ux_uy_ + LBE_b*ux_uy_*ux_uy_- (duu - LBE_a*ux_uy + LBE_b*ux_uy*ux_uy));	
+		lb.f9[ind] +=LBE_w2*rho*(duu_ - LBE_a*uxuy_  + LBE_b*uxuy_*uxuy_  - (duu - LBE_a*uxuy  + LBE_b*uxuy*uxuy));	
+		lb.f10[ind]+=LBE_w2*rho*(duu_ + LBE_a*ux_uy_ + LBE_b*ux_uy_*ux_uy_- (duu + LBE_a*ux_uy + LBE_b*ux_uy*ux_uy));	
+		const LBE_T uzux=uz+ux, uz_ux=uz-ux, uzuy=uz+uy, uz_uy=uz-uy;
+		const LBE_T uzux_=uz_+ux_, uz_ux_=uz_-ux_, uzuy_=uz_+uy_, uz_uy_=uz_-uy_;
+		lb.f1u[ind] +=LBE_w2*rho*(duu_ + LBE_a*uzux_ + LBE_b*uzux_*uzux_  - (duu + LBE_a*uzux + LBE_b*uzux*uzux));	
+		lb.f2u[ind] +=LBE_w2*rho*(duu_ + LBE_a*uzuy_ + LBE_b*uzuy_*uzuy_  - (duu + LBE_a*uzuy + LBE_b*uzuy*uzuy));	
+		lb.f3u[ind] +=LBE_w2*rho*(duu_ + LBE_a*uz_ux_+ LBE_b*uz_ux_*uz_ux_- (duu + LBE_a*uz_ux+ LBE_b*uz_ux*uz_ux));	
+		lb.f4u[ind] +=LBE_w2*rho*(duu_ + LBE_a*uz_uy_+ LBE_b*uz_uy_*uz_uy_- (duu + LBE_a*uz_uy+ LBE_b*uz_uy*uz_uy)); 
+		lb.f1d[ind] +=LBE_w2*rho*(duu_ - LBE_a*uz_ux_+ LBE_b*uz_ux_*uz_ux_- (duu - LBE_a*uz_ux+ LBE_b*uz_ux*uz_ux));	
+		lb.f2d[ind] +=LBE_w2*rho*(duu_ - LBE_a*uz_uy_+ LBE_b*uz_uy_*uz_uy_- (duu - LBE_a*uz_uy+ LBE_b*uz_uy*uz_uy));	
+		lb.f3d[ind] +=LBE_w2*rho*(duu_ - LBE_a*uzux_ + LBE_b*uzux_*uzux_  - (duu - LBE_a*uzux + LBE_b*uzux*uzux)); 	
+		lb.f4d[ind] +=LBE_w2*rho*(duu_ - LBE_a*uzuy_ + LBE_b*uzuy_*uzuy_  - (duu - LBE_a*uzuy + LBE_b*uzuy*uzuy)); 
+	#
+}
+
+
+
+void psi2force(d_Array3d<LBE_T> &fx, d_Array3d<LBE_T> &fy, d_Array3d<LBE_T> &fz, d_Array3d<LBE_T>  &psi, const LBE_T G=1.0){
+	CUP FORALL_3D_IN fx fx fy fy fz fz psi psi G G #
+		LBE_T ux_=(psi[ind+1]-psi[ind-1]);
+		LBE_T uy_=(psi[ind+psi.Nx]-psi[ind-psi.Nx]);
+		LBE_T uz_=(psi[ind+psi.Nx*psi.Ny]-psi[ind-psi.Nx*psi.Ny]);
+ 
+		LBE_T tmp=0.5*(psi[ind+psi.Nx*psi.Ny+1]-psi[ind-psi.Nx*psi.Ny-1]); 
+		ux_+=tmp; uz_+=tmp;
+		tmp=0.5*(psi[ind+psi.Nx*psi.Ny-1] - psi[ind-psi.Nx*psi.Ny+1]);
+		ux_-=tmp; uz_+=tmp;
+		tmp=0.5*(psi[ind+psi.Nx+1]-psi[ind-psi.Nx-1]);
+		ux_+=tmp; uy_+=tmp;
+		tmp=0.5*(psi[ind-psi.Nx+1]-psi[ind+psi.Nx-1]);
+		ux_+=tmp; uy_-=tmp;
+		tmp=0.5*(psi[ind+psi.Nx*psi.Ny+psi.Nx]-psi[ind-psi.Nx*psi.Ny-psi.Nx]);  
+		uy_+=tmp; uz_+=tmp;
+		tmp=0.5*(psi[ind-psi.Nx*psi.Ny+psi.Nx] -psi[ind+psi.Nx*psi.Ny-psi.Nx]);
+		uy_+=tmp; uz_-=tmp;
+	
+		fx[ind]+=G*ux_*psi[ind]/3;
+		fy[ind]+=G*uy_*psi[ind]/3;
+		fz[ind]+=G*uz_*psi[ind]/3;
+	#
+}
+
+void force(d_LB3d &lb, const d_Array3d<LBE_T> &fx, const d_Array3d<LBE_T> &fy, const d_Array3d<LBE_T> &fz){
+	CUP FORALL_3D_IN lb lb fx fx fy fy fz fz #
+		const LBE_T rho=lb.rho[ind], ux=lb.ux[ind], uy=lb.uy[ind], uz=lb.uz[ind];
+		const LBE_T uu=ux*ux+uy*uy+uz*uz;	const LBE_T duu=1.0-LBE_d*uu;
+ 		
+		LBE_T ux_=ux+fx[ind]/rho;
+		LBE_T uy_=uy+fy[ind]/rho;
+		LBE_T uz_=uz+fz[ind]/rho;
+
+		const LBE_T uu_=ux_*ux_+uy_*uy_+uz_*uz_;	const LBE_T duu_=1.0-LBE_d*uu_; 	
+	
+		lb.f0[ind]+=LBE_w0*rho*(duu_ - duu); 	
+		lb.f1[ind]+=LBE_w1*rho*(duu_ + LBE_a*ux_ + LBE_b*ux_*ux_ - (duu + LBE_a*ux + LBE_b*ux*ux));	
+		lb.f2[ind]+=LBE_w1*rho*(duu_ + LBE_a*uy_ + LBE_b*uy_*uy_ - (duu + LBE_a*uy + LBE_b*uy*uy));	
+		lb.f3[ind]+=LBE_w1*rho*(duu_ - LBE_a*ux_ + LBE_b*ux_*ux_ - (duu - LBE_a*ux + LBE_b*ux*ux));	
+		lb.f4[ind]+=LBE_w1*rho*(duu_ - LBE_a*uy_ + LBE_b*uy_*uy_ - (duu - LBE_a*uy + LBE_b*uy*uy));	
+		lb.f5[ind]+=LBE_w1*rho*(duu_ + LBE_a*uz_ + LBE_b*uz_*uz_ - (duu + LBE_a*uz + LBE_b*uz*uz));	
+		lb.f6[ind]+=LBE_w1*rho*(duu_ - LBE_a*uz_ + LBE_b*uz_*uz_ - (duu - LBE_a*uz + LBE_b*uz*uz));	
+		const LBE_T uxuy=ux+uy, ux_uy=ux-uy;
+		const LBE_T uxuy_=ux_+uy_, ux_uy_=ux_-uy_;
+		lb.f7[ind] +=LBE_w2*rho*(duu_ + LBE_a*uxuy_  + LBE_b*uxuy_*uxuy_  - (duu + LBE_a*uxuy  + LBE_b*uxuy*uxuy));	
+		lb.f8[ind] +=LBE_w2*rho*(duu_ - LBE_a*ux_uy_ + LBE_b*ux_uy_*ux_uy_- (duu - LBE_a*ux_uy + LBE_b*ux_uy*ux_uy));	
+		lb.f9[ind] +=LBE_w2*rho*(duu_ - LBE_a*uxuy_  + LBE_b*uxuy_*uxuy_  - (duu - LBE_a*uxuy  + LBE_b*uxuy*uxuy));	
+		lb.f10[ind]+=LBE_w2*rho*(duu_ + LBE_a*ux_uy_ + LBE_b*ux_uy_*ux_uy_- (duu + LBE_a*ux_uy + LBE_b*ux_uy*ux_uy));	
+		const LBE_T uzux=uz+ux, uz_ux=uz-ux, uzuy=uz+uy, uz_uy=uz-uy;
+		const LBE_T uzux_=uz_+ux_, uz_ux_=uz_-ux_, uzuy_=uz_+uy_, uz_uy_=uz_-uy_;
+		lb.f1u[ind] +=LBE_w2*rho*(duu_ + LBE_a*uzux_ + LBE_b*uzux_*uzux_  - (duu + LBE_a*uzux + LBE_b*uzux*uzux));	
+		lb.f2u[ind] +=LBE_w2*rho*(duu_ + LBE_a*uzuy_ + LBE_b*uzuy_*uzuy_  - (duu + LBE_a*uzuy + LBE_b*uzuy*uzuy));	
+		lb.f3u[ind] +=LBE_w2*rho*(duu_ + LBE_a*uz_ux_+ LBE_b*uz_ux_*uz_ux_- (duu + LBE_a*uz_ux+ LBE_b*uz_ux*uz_ux));	
+		lb.f4u[ind] +=LBE_w2*rho*(duu_ + LBE_a*uz_uy_+ LBE_b*uz_uy_*uz_uy_- (duu + LBE_a*uz_uy+ LBE_b*uz_uy*uz_uy)); 
+		lb.f1d[ind] +=LBE_w2*rho*(duu_ - LBE_a*uz_ux_+ LBE_b*uz_ux_*uz_ux_- (duu - LBE_a*uz_ux+ LBE_b*uz_ux*uz_ux));	
+		lb.f2d[ind] +=LBE_w2*rho*(duu_ - LBE_a*uz_uy_+ LBE_b*uz_uy_*uz_uy_- (duu - LBE_a*uz_uy+ LBE_b*uz_uy*uz_uy));	
+		lb.f3d[ind] +=LBE_w2*rho*(duu_ - LBE_a*uzux_ + LBE_b*uzux_*uzux_  - (duu - LBE_a*uzux + LBE_b*uzux*uzux)); 	
+		lb.f4d[ind] +=LBE_w2*rho*(duu_ - LBE_a*uzuy_ + LBE_b*uzuy_*uzuy_  - (duu - LBE_a*uzuy + LBE_b*uzuy*uzuy)); 
+	#
+}
+
+
+
+
+
+
+void force(d_LB3d &lb, d_Array3d<LBE_T>  & rho2, LBE_T G){
+	CUP FORALL_3D_IN lb lb rho2 rho2 G G  #
+	const LBE_T rho=lb.rho[ind], ux=lb.ux[ind], uy=lb.uy[ind], uz=lb.uz[ind];
+	const LBE_T uu=ux*ux+uy*uy+uz*uz;	const LBE_T duu=1.0-LBE_d*uu;
+ 		
+	LBE_T ux_=(rho2[ind+1]-rho2[ind-1]);
+	LBE_T uy_=(rho2[ind+lb.Nx]-rho2[ind-lb.Nx]);
+	LBE_T uz_=(rho2[ind+lb.Nx*lb.Ny]-rho2[ind-lb.Nx*lb.Ny]);
+ 
+	LBE_T tmp=0.5*(rho2[ind+lb.Nx*lb.Ny+1]-rho2[ind-lb.Nx*lb.Ny-1]); 
+	ux_+=tmp; uz_+=tmp;
+	tmp=0.5*(rho2[ind+lb.Nx*lb.Ny-1] - rho2[ind-lb.Nx*lb.Ny+1]);
+	ux_-=tmp; uz_+=tmp;
+	tmp=0.5*(rho2[ind+lb.Nx+1]-rho2[ind-lb.Nx-1]);
+	ux_+=tmp; uy_+=tmp;
+	tmp=0.5*(rho2[ind-lb.Nx+1]-rho2[ind+lb.Nx-1]);
+	ux_+=tmp; uy_-=tmp;
+	tmp=0.5*(rho2[ind+lb.Nx*lb.Ny+lb.Nx] -rho2[ind-lb.Nx*lb.Ny-lb.Nx]);  
+	uy_+=tmp; uz_+=tmp;
+	tmp=0.5*(rho2[ind-lb.Nx*lb.Ny+lb.Nx] -rho2[ind+lb.Nx*lb.Ny-lb.Nx]);
+	uy_+=tmp; uz_-=tmp;
+	
+	ux_=ux+G*ux_;
+	uy_=uy+G*uy_;
+	uz_=uz+G*uz_;
+
+	const LBE_T uu_=ux_*ux_+uy_*uy_+uz_*uz_;	const LBE_T duu_=1.0-LBE_d*uu_; 	
+
+	lb.f0[ind]+=(LBE_w0*rho*(duu_) - LBE_w0*rho*(duu)); 	
+	lb.f1[ind]+=(LBE_w1*rho*(duu_ + LBE_a*ux_ + LBE_b*ux_*ux_) - LBE_w1*rho*(duu + LBE_a*ux + LBE_b*ux*ux));	
+	lb.f2[ind]+=(LBE_w1*rho*(duu_ + LBE_a*uy_ + LBE_b*uy_*uy_) - LBE_w1*rho*(duu + LBE_a*uy + LBE_b*uy*uy));	
+	lb.f3[ind]+=(LBE_w1*rho*(duu_ - LBE_a*ux_ + LBE_b*ux_*ux_) - LBE_w1*rho*(duu - LBE_a*ux + LBE_b*ux*ux));	
+	lb.f4[ind]+=(LBE_w1*rho*(duu_ - LBE_a*uy_ + LBE_b*uy_*uy_) - LBE_w1*rho*(duu - LBE_a*uy + LBE_b*uy*uy));	
+	lb.f5[ind]+=(LBE_w1*rho*(duu_ + LBE_a*uz_ + LBE_b*uz_*uz_) - LBE_w1*rho*(duu + LBE_a*uz + LBE_b*uz*uz));	
+	lb.f6[ind]+=(LBE_w1*rho*(duu_ - LBE_a*uz_ + LBE_b*uz_*uz_) - LBE_w1*rho*(duu - LBE_a*uz + LBE_b*uz*uz));	
+	const LBE_T uxuy=ux+uy, ux_uy=ux-uy;
+	const LBE_T uxuy_=ux_+uy_, ux_uy_=ux_-uy_;
+	lb.f7[ind] +=(LBE_w2*rho*(duu_ + LBE_a*uxuy_  + LBE_b*uxuy_*uxuy_)  - LBE_w2*rho*(duu + LBE_a*uxuy  + LBE_b*uxuy*uxuy));	
+	lb.f8[ind] +=(LBE_w2*rho*(duu_ - LBE_a*ux_uy_ + LBE_b*ux_uy_*ux_uy_)- LBE_w2*rho*(duu - LBE_a*ux_uy + LBE_b*ux_uy*ux_uy));	
+	lb.f9[ind] +=(LBE_w2*rho*(duu_ - LBE_a*uxuy_  + LBE_b*uxuy_*uxuy_)  - LBE_w2*rho*(duu - LBE_a*uxuy  + LBE_b*uxuy*uxuy));	
+	lb.f10[ind]+=(LBE_w2*rho*(duu_ + LBE_a*ux_uy_ + LBE_b*ux_uy_*ux_uy_)- LBE_w2*rho*(duu + LBE_a*ux_uy + LBE_b*ux_uy*ux_uy));	
+	const LBE_T uzux=uz+ux, uz_ux=uz-ux, uzuy=uz+uy, uz_uy=uz-uy;
+	const LBE_T uzux_=uz_+ux_, uz_ux_=uz_-ux_, uzuy_=uz_+uy_, uz_uy_=uz_-uy_;
+	lb.f1u[ind] +=(LBE_w2*rho*(duu_ + LBE_a*uzux_ + LBE_b*uzux_*uzux_)  - LBE_w2*rho*(duu + LBE_a*uzux + LBE_b*uzux*uzux));	
+	lb.f2u[ind] +=(LBE_w2*rho*(duu_ + LBE_a*uzuy_ + LBE_b*uzuy_*uzuy_)  - LBE_w2*rho*(duu + LBE_a*uzuy + LBE_b*uzuy*uzuy));	
+	lb.f3u[ind] +=(LBE_w2*rho*(duu_ + LBE_a*uz_ux_+ LBE_b*uz_ux_*uz_ux_)- LBE_w2*rho*(duu + LBE_a*uz_ux+ LBE_b*uz_ux*uz_ux));	
+	lb.f4u[ind] +=(LBE_w2*rho*(duu_ + LBE_a*uz_uy_+ LBE_b*uz_uy_*uz_uy_)- LBE_w2*rho*(duu + LBE_a*uz_uy+ LBE_b*uz_uy*uz_uy)); 
+	lb.f1d[ind] +=(LBE_w2*rho*(duu_ - LBE_a*uz_ux_+ LBE_b*uz_ux_*uz_ux_)- LBE_w2*rho*(duu - LBE_a*uz_ux+ LBE_b*uz_ux*uz_ux));	
+	lb.f2d[ind] +=(LBE_w2*rho*(duu_ - LBE_a*uz_uy_+ LBE_b*uz_uy_*uz_uy_)- LBE_w2*rho*(duu - LBE_a*uz_uy+ LBE_b*uz_uy*uz_uy));	
+	lb.f3d[ind] +=(LBE_w2*rho*(duu_ - LBE_a*uzux_ + LBE_b*uzux_*uzux_)  - LBE_w2*rho*(duu - LBE_a*uzux + LBE_b*uzux*uzux)); 	
+	lb.f4d[ind] +=(LBE_w2*rho*(duu_ - LBE_a*uzuy_ + LBE_b*uzuy_*uzuy_)  - LBE_w2*rho*(duu - LBE_a*uzuy + LBE_b*uzuy*uzuy)); 
+	#
+}
+
+#endif
+

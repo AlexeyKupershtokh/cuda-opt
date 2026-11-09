@@ -1,0 +1,3 @@
+#!/bin/sh
+gawk -f ../cup2include.awk $1 > qwert.qwert
+gawk -f ../cup2cu.awk $1 | astyle > $2

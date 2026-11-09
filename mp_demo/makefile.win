@@ -1,0 +1,25 @@
+CXX         =g++
+PREFIX      =/usr/local
+ARCH        =
+OPTIM       =-O3
+LIBS_MPPG   =-lmppg -lfltk -lpthread
+LIBS_ADD    = -ltiff -lole32 -luuid -lcomctl32 -lwsock32
+CXXFLAGS    =$(OPTIM) -DTIFF_SUPPORT -DWIN32 -DPOSIX__ -I../ -I$(PREFIX)/include
+LDFLAGS	    =-L$(PREFIX)/lib $(LIBS_MPPG) $(LIBS_ADD)
+EXT         =.exe
+
+ALL=mp_demo
+all: $(ALL) 
+all_execute =$(addsuffix $(EXT), $(ALL))
+clean_easy:
+	rm -f *.o
+
+clean:
+	rm -f tmp.o $(all_execute) *.tif *.png *.eps
+
+%: %.cpp cuda_core.cu 
+	nvcc --shared -D_CONSOLE -D_MBCS -DWIN32 -DMP_LIBRARY --gpu-architecture sm_20 -I../  -Xcompiler /EHsc,/W3,/nologo,/O2,/Zi -L "C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Lib\x64" cuda_core.cu -o cuda_core.dll
+	gendef cuda_core.dll 
+	dlltool --as-flags=--64 -m i386:x86-64 -k --output-lib cuda_core.a --input-def cuda_core.def
+	$(CXX) -c $< $(CXXFLAGS) -I "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.1\include"  -o tmp.o
+	$(CXX) tmp.o -mwindows cuda_core.a $(LDFLAGS)  "/cygdrive/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v4.1/lib/x64/cudart.lib" -o $@

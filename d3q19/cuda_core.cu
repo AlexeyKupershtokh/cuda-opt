@@ -1,0 +1,59 @@
+// Простое LBE (перенос и релаксация)
+#include <mp/mp.h>
+#include <mp/lb3d.h>
+#include <mp/d_lb3d.h>
+#include <mp/ini.h>
+
+#include "cuda_core.h"
+
+const char * fnameini="./ini";
+
+float LBE_elapsedTime;
+
+const MP_Parallel MP_parallel=ini_read<MP_Parallel>(fnameini, "mp_parallel");
+int Nx=ini_read<int>(fnameini, "Nx", 128);
+int Ny=ini_read<int>(fnameini, "Ny", 128);
+int Nz=ini_read<int>(fnameini, "Nz", 128);
+LBE_T tau=ini_read<LBE_T>(fnameini, "tau", 0.55);
+
+d_LB3d lb(Nx, Ny, Nz);
+h_Array3d<LBE_T> rho(Nx, Ny, Nz), ux(Nx, Ny, Nz), uy(Nx, Ny, Nz), uz(Nx, Ny, Nz);
+
+
+void init(){
+    setrhou(lb, 1.0, 0.0, 0.0, 0.0);
+    ini_read(fnameini, lb.rho, "rho");
+    rhou2f(lb);
+
+    cpy(rho, lb.rho);
+    cpy(ux, lb.ux);
+    cpy(uy, lb.uy);
+    cpy(uz, lb.uz);
+}
+
+void cuda_calc(){
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
+    int NN=30;
+    for(int i=0; i<NN; i++){
+		transfer(lb);
+		f2rhou(lb);
+		relax(lb, tau);
+		sync(lb);
+		periodicz(lb); periodicx(lb); periodicy(lb);
+    }
+
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    float elapsedTime_;
+    cudaEventElapsedTime(&elapsedTime_, start, stop);
+    LBE_elapsedTime=elapsedTime_/(Nx*Ny*Nz*NN)*LBE_ncores*LBE_gpuf*1e-3;
+
+    cpy(rho, lb.rho);
+    cpy(ux, lb.ux);
+    cpy(uy, lb.uy);
+    cpy(uz, lb.uz);
+}
+

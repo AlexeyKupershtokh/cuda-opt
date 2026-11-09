@@ -1,0 +1,21 @@
+Nx 768
+Ny 768
+Nz 3
+tau 2
+
+rho2 rect_corner 0 0 0 1 1 1 0.0
+
+#rho2 sphere 0.5 0.5 0.5 0.2 1.0
+#rho2 rect_corner 0.5 0.3 0 0.7 0.7 1 1.0
+
+#rho2 rect 0.25 0.25 0.5 0.05 0.2 0.2 1.0
+rho2 rect 0.5 0.5 0.5 0.05 0.2 0.2 1.0
+#rho2 rect 0.75 0.75 0.5 0.05 0.2 0.2 1.0
+
+ux rect_corner 0 0 0 1 1 1 0.05
+
+mp_parallel 0
+
+#rho sphere x0 y0 z0 R0 value
+#array rect_corner x1 y1 z1 x2 y2 z2 value
+#array rect x0 y0 z0 rx ry rz value

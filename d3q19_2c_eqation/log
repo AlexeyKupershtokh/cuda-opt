@@ -1,0 +1,6 @@
+cuda_core.cu(25): error: expression must have arithmetic or enum type
+
+cuda_core.cu(25): error: label "Nz" was referenced but not defined
+
+2 errors detected in the compilation of "/tmp/tmpxft_0000128e_00000000-4_cuda_core.cpp1.ii".
+make: *** [mppg_hello] Ошибка 2

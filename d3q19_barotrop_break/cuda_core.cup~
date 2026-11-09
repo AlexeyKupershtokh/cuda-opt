@@ -1,0 +1,119 @@
+#include <mp/mp.h>
+#include <mp/lb3d.h>
+#include <mp/d_lb3d.h>
+
+#include "cuda_core.h"
+
+int Nx=16*16*16;
+int Ny=16;
+int Nz=6+2;
+double rhol=1.0, ul=0.0, rhor=0.5, ur=0.0;
+double T=0.3;
+double tau=0.6;
+
+//int Nz=256+128+64+32;
+
+float LBE_elapsedTime;
+//int a[2]={0,1};
+//MP_Parallel MP_parallel(a, 2);
+MP_Parallel MP_parallel;
+
+d_LB3d *lbp=0;              // (Nx, Ny, Nz);
+d_Array3d<LBE_T> *psip=0;   // Массив для вычисления сил
+
+h_Array3d<LBE_T> rho(Nx,Ny,Nz), ux(Nx,Ny,Nz), uy(Nx, Ny, Nz), uz(Nx, Ny, Nz);
+
+CUP INSERT core
+
+void resize(){
+	if (lbp) {
+		lbp->free();
+		delete lbp;
+		lbp=0;
+	}
+	if (psip){
+		psip->free();
+		delete psip;
+		psip=0;
+	}
+
+	lbp=new d_LB3d(Nx, Ny, Nz);
+	psip=new d_Array3d<LBE_T>(Nx, Ny, Nz);
+	rho.resize(Nx,Ny,Nz);
+	ux.resize(Nx,Ny,Nz);
+	uy.resize(Nx, Ny, Nz);
+	uz.resize(Nx, Ny, Nz);
+}
+
+void init(){
+    d_LB3d &lb=*lbp;
+    setrhou(lb, 1.0, 0.0, 0.0, 0.0);
+
+    CUP FORALL_3D_IJK lb lb rhol rhol ul ul rhor rhor ur ur # 		
+		if(  i < lb.Nx/2 ) {
+			lb.rho[ind]=rhol;			
+			lb.ux[ind]=ul;
+		}else{ 
+			lb.rho[ind]=rhor;
+			lb.ux[ind]=ur;
+		}; 
+	#
+    rhou2f(lb);
+}
+
+void cuda_calc(){
+    d_LB3d &lb=*lbp;
+    d_Array3d<LBE_T> &psi=*psip;
+
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
+    int NN=10;
+    for(int i=0; i<NN; i++){
+		transfer(lb);
+	   	f2rhou(lb);
+    	relax(lb, tau);
+		sync(lb);
+
+		CUP FORALL_3DYZ lb lb rhol rhol rhor rhor ul ul ur ur #
+			set_value(lb, ind, rhol, ul, 0.0, 0.0);
+			set_value(lb, ind+lb.Nx-1, rhor, ur, 0.0, 0.0);
+		#
+		periodicy(lb); periodicz(lb);
+
+		// Вычисление сил для уравнения состояния
+		CUP FORALL_3D rho lb.rho psi psi T T # 
+			psi[ind]=sqrt(fabs(rho[ind]/3.0-0.1*(rho[ind]-1.0)) ); 
+			// psi[ind]=sqrt(fabs((rho[ind]*(1.0/3.0-T)))); 
+		#
+		forcepsi(lb, psi, T < 1.0/3.0? 1.0 : -1.0 );
+		sync(lb);
+
+		CUP FORALL_3DYZ lb lb rhol rhol rhor rhor ul ul ur ur #
+			set_value(lb, ind, rhol, ul, 0.0, 0.0);
+			set_value(lb, ind+lb.Nx-1, rhor, ur, 0.0, 0.0);
+		#
+
+		sync(lb);
+		CUP FORALL_3DYZ lb lb rhol rhol rhor rhor ul ul ur ur #
+			set_value(lb, ind, rhol, ul, 0.0, 0.0);
+			set_value(lb, ind+lb.Nx-1, rhor, ur, 0.0, 0.0);
+		#
+		periodicy(lb); periodicz(lb);
+
+    }
+
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    float elapsedTime_;
+    cudaEventElapsedTime(&elapsedTime_, start, stop);
+
+    LBE_elapsedTime=elapsedTime_/(Nx*Ny*Nz*NN)*LBE_ncores*LBE_gpuf*1e-3;
+ 
+    cpy(rho, lb.rho);
+    cpy(ux, lb.ux);
+    cpy(uy, lb.uy);
+    cpy(uz, lb.uz);
+}
+

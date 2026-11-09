@@ -1,0 +1,62 @@
+#include <iostream>
+#include <fstream>
+
+#include <mp/rdtsc.h>
+#include <mp/d_array2d.h>
+
+const int Nx=256*4;
+const int Ny=256*4;
+
+CUP INSERT lapl2d
+
+using namespace std;
+
+typedef double T;
+
+int main(){
+	d_Array2d<T> a(Nx, Ny), b(Nx, Ny);
+	T * h_A=new T[Nx*Ny];
+	
+	CUP FORALL_2D     A a # A[ind]=0;
+	CUP FORALL_2D_IN  A a # A[ind]=ind;
+	CUP FORALL_2D A a B b # B[ind]=A[ind];
+	
+	int NN=100;
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start, 0);
+	
+	unsigned long long  l1, l2;
+	rdtscll(l1);
+	for(int i=0; i<NN; i++){
+		// CUP FORALL_2D_IN_2 a b A[ind]=0.25*(B[ind-1]+B[ind-B.nx()]+B[ind+B.nx()]+B[ind+1]);
+		// CUP FORALL_2D_IN_2 a b B[ind]=0.25*(A[ind-1]+A[ind-B.nx()]+A[ind+B.nx()]+A[ind+1]);
+		CUP FORALL_2D_IN A a B b # A[ind]=0.25*(B[ind-1]+B[ind+1]+B[ind-Nx]+B[ind+Nx]);
+		CUP FORALL_2D_IN A a B b # B[ind]=0.25*(A[ind-1]+A[ind+1]+A[ind-Nx]+A[ind+Nx]);
+	}
+	rdtscll(l2);
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
+	float elapsedTime;
+	cudaEventElapsedTime(&elapsedTime, start, stop);
+
+	cout << (l2-l1)*0.5/(Nx*Ny)/NN << " ticks, " << 0.5*elapsedTime/(Nx*Ny)/NN*1.147e9*1e-3*448 << " ticks\n";
+
+	//cout << (l2-l1)*0.5/(Nx*Ny)/10000 << " ticks per node\n";
+	//cout << l1 << '\n' << l2 << '\n' << l2 - l1<< '\n';
+
+	h_Array2d<T> c(Nx, Ny);
+	cpy(c,a);
+	{
+		ofstream ofs("1.dat");
+		for (int i=0; i<c.ny(); i++){
+			for (int j=0; j<c.nx(); j++)
+				ofs << c(j,i) << '\t';
+			ofs << '\n';
+		}
+	}
+	
+	return 0;
+}
+

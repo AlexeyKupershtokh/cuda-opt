@@ -1,0 +1,223 @@
+#ifndef D_CUDA_ARRAY3D_H_
+#define D_CUDA_ARRAY3D_H_
+
+#include <vector>
+#include <iostream>
+
+#include <mp/mp.h>
+#include <mp/h_array3d.h>
+
+// 3d массив на одном GPU
+template<typename T> class d_Array3d_base{
+public:
+	T* p;
+public:
+	int Nx, Ny, Nz;
+public:
+	d_Array3d_base():p(0), Nx(0), Ny(0), Nz(0){}	
+	d_Array3d_base(size_t Nx, size_t Ny, size_t Nz):Nx(Nx), Ny(Ny), Nz(Nz){
+		if ( cudaMalloc((void **)&p, Nx*Ny*Nz*sizeof(T)) != cudaSuccess)
+			throw(MP_Exeption("Mem error. Mp::d_Array3d_base!\n"));
+	}
+	~d_Array3d_base(){}
+	void free(){
+		if ( p!=0 ) cudaFree(p);
+		p=0;
+		Nx=Ny=Nz=0;
+	}
+	void resize(int Nx_, int Ny_, int Nz_){
+		if ( p!=0 ) cudaFree(p);
+		Nx=Nx_; Ny=Ny_; Nz=Nz_;
+		if ( cudaMalloc(&p, Nx*Ny*Nz*sizeof(T)) != cudaSuccess)
+			throw(MP_Exeption("Mem error. Mp::d_Array3d_base::resize!\n"));
+	}
+	inline __host__ __device__ int nx()const{return Nx;}
+	inline __host__ __device__ int ny()const{return Ny;}
+	inline __host__ __device__ int nz()const{return Nz;}
+	inline __device__       T & operator[](int ind)     {return p[ind];}
+	inline __device__ const T & operator[](int ind)const{return p[ind];}
+	inline __device__       T & operator()(int ix, int iy, int kz)     {return p[kz*Nx*Ny+iy*Nx+ix];}
+	inline __device__ const T & operator()(int ix, int iy, int kz)const{return p[kz*Nx*Ny+iy*Nx+ix];}
+};
+
+template<typename T> void swap(d_Array3d_base<T> &a, d_Array3d_base<T> &b){
+	T *p=a.p;
+	a.p=b.p;
+	b.p=p;
+}
+
+template<typename T> void cpy(h_Array3d<T> &a, d_Array3d_base<T> &b){  // a=b
+	cudaMemcpy(a.p, b.p, b.nx()*b.ny()*b.nz()*sizeof(T), cudaMemcpyDeviceToHost);
+}
+
+template<typename T> void cpy(d_Array3d_base<T> &a, h_Array3d<T> &b){  // a=b
+	cudaMemcpy(a.p, b.p, b.nx()*b.ny()*b.nz()*sizeof(T), cudaMemcpyHostToDevice);
+}
+
+template<typename T> void sync(d_Array3d_base<T> & a){}
+
+// 3d массив с автоматическим распределением памяти на нескольких GPU
+template<typename T> class d_Array3d{
+public:
+	std::vector<T*> p;
+	int Nx, Ny, Nz;
+
+	d_Array3d():p(MP_parallel.GPU_pool.size()), Nx(0), Ny(0), Nz(0){	
+		for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++)
+			p[i]=0;
+	}	
+	d_Array3d(size_t Nx, size_t Ny, size_t Nz):p(MP_parallel.GPU_pool.size()), Nx(Nx), Ny(Ny), Nz(Nz){
+		//sync=true;
+		for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
+			if (cudaSetDevice(MP_parallel.GPU_pool[i]) != cudaSuccess )
+				throw(MP_Exeption("cudaSetDevice error. Mp::d_Array3d!\n"));
+			if ( cudaMalloc(&p[i], Nx*Ny*((Nz-2)/MP_parallel.GPU_pool.size()+2)*sizeof(T)) != cudaSuccess){
+				std::cout << "Bad device " << i << ". ";
+				throw(MP_Exeption("Mem error. Mp::d_Array3d!\n"));
+			}
+		}
+	}
+	~d_Array3d(){}
+	void free(){
+		for(size_t i=0; i<p.size(); i++){
+			cudaSetDevice(MP_parallel.GPU_pool[i]);
+			if ( p[i]!=0 ) cudaFree(p[i]);
+			p[i]=0;
+		}
+		Nx=Ny=Nz=0;		
+	}
+	void resize(int Nx_, int Ny_, int Nz_){
+		Nx=Nx_; Ny=Ny_; Nz=Nz_;
+		for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){			
+			cudaSetDevice(MP_parallel.GPU_pool[i]);
+			if ( p[i]!=0 ) cudaFree(p[i]);
+			if (cudaMalloc(&p[i], Nx*Ny*((Nz-2)/MP_parallel.GPU_pool.size()+2)*sizeof(T)) != cudaSuccess)
+					throw(MP_Exeption("Mem error. Mp::d_Array3d::resize!\n"));
+		}						
+	}
+	inline __host__ __device__ int nx()const{return Nx;}
+	inline __host__ __device__ int ny()const{return Ny;}
+	inline __host__ __device__ int nz()const{return Nz;}
+	//inline __device__       T & operator[](int ind)     {return p1[ind];}
+	//inline __device__ const T & operator[](int ind)const{return p1[ind];}
+	//inline __device__       T & operator()(int ix, int iy, int kz)     {return p1[kz*Nx*Ny+iy*Nx+ix];}
+	//inline __device__ const T & operator()(int ix, int iy, int kz)const{return p1[kz*Nx*Ny+iy*Nx+ix];}
+};
+
+template<typename T> void swap(d_Array3d<T> &a, d_Array3d<T> &b){
+	for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
+		T *p=a.p[i];
+		a.p[i]=b.p[i];
+		b.p[i]=p;
+	}
+}
+
+template<typename T>  d_Array3d_base<T> split(size_t i, d_Array3d<T> & a){
+	d_Array3d_base<T> tmp;
+	tmp.p=a.p[i];
+	tmp.Nx=a.Nx;
+	tmp.Ny=a.Ny;
+	tmp.Nz=(a.Nz-2)/MP_parallel.GPU_pool.size()+2;
+	return tmp;
+}
+
+template<typename T> void sync(d_Array3d<T> & a){
+	for(size_t i=0; i<MP_parallel.GPU_pool.size()-1; i++){
+		cudaMemcpyPeer(a.p[i+1],  MP_parallel.GPU_pool[i+1], a.p[i]+a.Nx*a.Ny*((a.Nz-2)/MP_parallel.GPU_pool.size()+2-2),  MP_parallel.GPU_pool[i], a.Nx*a.Ny*sizeof(T));
+		cudaMemcpyPeer(a.p[i]+a.Nx*a.Ny*((a.Nz-2)/MP_parallel.GPU_pool.size()+2-1), MP_parallel.GPU_pool[i], a.p[i+1]+a.Nx*a.Ny,  MP_parallel.GPU_pool[i+1], a.Nx*a.Ny*sizeof(T));
+	}
+}
+
+//    CUP FORALL_3DYZ  a a #
+template<typename T1> __global__ void CUP_3DYZ_1_d_array0(T1 a){const size_t j=blockIdx.x*blockDim.x+threadIdx.x;
+const size_t k=blockIdx.y*blockDim.y+threadIdx.y;
+const size_t ind=k*a.Nx*a.Ny+j*a.Nx;
+
+const size_t n1=ind+a.Nx-2; 
+const size_t n2=ind+a.Nx-1; 
+const size_t n3=ind+1; 
+a[ind]=a[n1]; a[n2]=a[n3]; 
+}
+
+//	CUP FORALL_3DXZ  a a # 
+template<typename T1> __global__ void CUP_3DXZ_1_d_array1(T1 a){const size_t i=blockIdx.x*blockDim.x+threadIdx.x;
+const size_t k=blockIdx.y*blockDim.y+threadIdx.y;
+const size_t ind=k*a.Nx*a.Ny+i;
+
+const size_t n1=ind+a.Nx*(a.Ny-2); 
+const size_t n2=ind+a.Nx*(a.Ny-1); 
+const size_t n3=ind+a.Nx; 
+a[ind]=a[n1]; a[n2]=a[n3]; 
+}
+
+
+template<typename T> void periodicx(d_Array3d<T> & a){
+{
+dim3 threads(MP_parallel.Ny, MP_parallel.Nz_bound);
+dim3 grid(a.Ny/threads.x, ((a.Nz-2)/MP_parallel.GPU_pool.size()+2)/threads.y);
+cudaStream_t s[4];
+for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
+cudaSetDevice(MP_parallel.GPU_pool[i]);
+cudaStreamCreate(&s[i]);
+CUP_3DYZ_1_d_array0<<<grid, threads, 0, s[i]>>>(split(i, a));
+}
+for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
+cudaSetDevice(MP_parallel.GPU_pool[i]);
+cudaStreamDestroy(s[i]);
+}
+}
+
+
+
+
+
+}
+
+template<typename T> void periodicy(d_Array3d<T> & a){
+{
+dim3 threads(MP_parallel.Nx, MP_parallel.Nz_bound);
+dim3 grid(a.Nx/threads.x, ((a.Nz-2)/MP_parallel.GPU_pool.size()+2)/threads.y);
+cudaStream_t s[4];
+for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
+cudaSetDevice(MP_parallel.GPU_pool[i]);
+cudaStreamCreate(&s[i]);
+CUP_3DXZ_1_d_array1<<<grid, threads, 0, s[i]>>>(split(i, a));
+}
+for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
+cudaSetDevice(MP_parallel.GPU_pool[i]);
+cudaStreamDestroy(s[i]);
+}
+}
+
+
+
+
+
+}
+
+template<typename T> void periodicz(d_Array3d<T> & a){
+	cudaMemcpyPeer(a.p[0], MP_parallel.GPU_pool[0], a.p.back()+a.Nx*a.Ny*((a.Nz-2)/MP_parallel.GPU_pool.size()+2-2), MP_parallel.GPU_pool.back(), a.Nx*a.Ny*sizeof(LBE_T));
+	cudaMemcpyPeer(a.p.back()+a.Nx*a.Ny*((a.Nz-2)/MP_parallel.GPU_pool.size()+2-1), MP_parallel.GPU_pool.back(), a.p[0]+a.Nx*a.Ny, MP_parallel.GPU_pool[0], a.Nx*a.Ny*sizeof(LBE_T));
+}
+
+template<typename T> void cpy(h_Array3d<T> &a, d_Array3d<T> &b){  // a=b
+	const int Nz=(b.nz()-2)/MP_parallel.GPU_pool.size();
+	cudaSetDevice(MP_parallel.GPU_pool[0]);
+	cudaMemcpy(a.p, b.p[0], b.nx()*b.ny()*sizeof(T), cudaMemcpyDeviceToHost);
+	for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
+		cudaSetDevice(MP_parallel.GPU_pool[i]);
+		cudaMemcpy(a.p+b.nx()*b.ny()*(i*Nz+1), b.p[i]+b.nx()*b.ny(), b.nx()*b.ny()*Nz*sizeof(T), cudaMemcpyDeviceToHost);	
+	}
+	cudaSetDevice(MP_parallel.GPU_pool.back());
+	cudaMemcpy(a.p+  b.nx()*b.ny()*(1+Nz*b.p.size()), b.p.back()+b.nx()*b.ny()*(Nz+2-1), b.nx()*b.ny()*sizeof(T), cudaMemcpyDeviceToHost);
+}
+
+template<typename T> void cpy(d_Array3d<T> &a, h_Array3d<T> &b){  // a=b
+	for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
+		cudaSetDevice(MP_parallel.GPU_pool[i]);
+		cudaMemcpy(a.p[i], b.p+b.nx()*b.ny()*(b.nz()/MP_parallel.GPU_pool.size())*i, a.nx()*a.ny()*(a.nz()/MP_parallel.GPU_pool.size())*sizeof(T), 			cudaMemcpyHostToDevice);
+	}
+}
+
+#endif /* D_CUDA_ARRAY3D_H_ */
+

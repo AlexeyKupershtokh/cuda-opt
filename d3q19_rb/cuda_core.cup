@@ -1,0 +1,90 @@
+// LBE с силами
+#include <mp/mp.h>
+#include <mp/lb3d.h>
+#include <mp/d_lb3d.h>
+#include <mp/ini.h>
+
+#include "cuda_core.h"
+
+const char * fnameini="./ini";
+
+float LBE_elapsedTime;
+
+const MP_Parallel MP_parallel=ini_read<MP_Parallel>(fnameini, "mp_parallel");
+int Nx=ini_read<int>(fnameini, "Nx", 128);
+int Ny=ini_read<int>(fnameini, "Ny", 128);
+int Nz=ini_read<int>(fnameini, "Nz", 128);
+LBE_T tau=ini_read<LBE_T>(fnameini, "tau", 0.55);
+LBE_T betta=ini_read<LBE_T>(fnameini, "betta", 0.1);
+
+d_LB3d lb(Nx, Ny, Nz);
+h_Array3d<LBE_T> rho(Nx, Ny, Nz), ux(Nx, Ny, Nz), uy(Nx, Ny, Nz), uz(Nx, Ny, Nz);
+d_Array3d<LBE_T> fx(Nx, Ny, Nz), fy(Nx, Ny, Nz), fz(Nx, Ny, Nz);
+d_Array3d<LBE_T> rho2(Nx, Ny, Nz), rho_tmp(Nx, Ny, Nz);
+
+CUP INSERT core
+
+void init(){
+	ini_read(fnameini, tau, "tau");
+
+	setrhou(lb, 1.0, 0.05, 0.0, 0.0);
+		
+	CUP FORALL_3D rho2 rho2 rho_tmp rho_tmp # 
+		rho_tmp[ind]=rho2[ind]=0.0; 
+	#
+
+	ini_read(fnameini, rho2, "rho2");
+	ini_read(fnameini, lb.ux, "ux");
+
+	for(size_t i=0; i<5; i++){
+		CUP FORALL_3D_IN A rho2 B rho_tmp Nx rho.Nx Ny rho.Ny Nxy rho.Nx*rho.Ny # B[ind]=1.0/6*(A[ind-1]+A[ind+1]+A[ind-Nx]+A[ind+Nx]+A[ind-Nxy]+A[ind+Nxy]); #
+		sync(rho_tmp);
+		periodicz(rho_tmp); periodicx(rho_tmp); periodicy(rho_tmp);
+		CUP FORALL_3D_IN A rho2 B rho_tmp Nx rho.Nx Ny rho.Ny Nxy rho.Nx*rho.Ny # A[ind]=1.0/6*(B[ind-1]+B[ind+1]+B[ind-Nx]+B[ind+Nx]+B[ind-Nxy]+B[ind+Nxy]); #
+		sync(rho2);
+		periodicz(rho2); periodicx(rho2); periodicy(rho2);
+	}
+
+	CUP FORALL_3D lb lb rho2 rho2 #
+		lb.rho[ind]=1.0-rho2[ind]+0.002;
+	#
+  	rhou2f(lb);
+}
+
+void cuda_calc(){
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
+    int NN=30;
+    for(int i=0; i<NN; i++){	
+		transfer(lb);
+		f2rhou(lb);
+		relax(lb, tau);		
+		CUP FORALL_3D rho lb.rho rho2 rho2 ux lb.ux uy lb.uy uz lb.uz fx fx fy fy fz fz betta betta # 
+			const LBE_T tmp=betta*rho[ind]*rho2[ind];
+			fx[ind]=-ux[ind]*tmp;
+			fy[ind]=-uy[ind]*tmp;
+			fz[ind]=-uz[ind]*tmp;			
+		#
+		sync(lb.rho); periodicz(lb); periodicx(lb); periodicy(lb);
+		psipsi2force(fx, fy, fz, lb.rho, rho2, -0.4); // add force
+		force(lb, fx, fy, fz);
+		f2rhou(lb);
+		sync(lb);
+		periodicz(lb); periodicx(lb); periodicy(lb);
+    }
+
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    float elapsedTime_;	
+    cudaEventElapsedTime(&elapsedTime_, start, stop);	
+
+    LBE_elapsedTime=elapsedTime_/(Nx*Ny*Nz*NN)*LBE_ncores*LBE_gpuf*1e-3;
+
+    cpy(rho, lb.rho);
+    cpy(ux, lb.ux);
+    cpy(uy, lb.uy);
+    cpy(uz, lb.uz);
+}
+

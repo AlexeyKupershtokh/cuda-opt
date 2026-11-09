@@ -1,0 +1,15 @@
+Nx 512
+Ny 256
+Nz 3
+gx 0.0
+gy 5e-6
+
+
+rho rect_corner 0 0 0 1 1 1 0.8
+rho rect 0.5 0.5 0.5 0.2 0.2 0.2 1
+
+#rho sphere x0 y0 z0 R0 value
+#array rect x0 y0 z0 rx ry rz value
+#array rect_corner x1 y1 z1 x2 y2 z2 value
+
+#mp_parallel 0 

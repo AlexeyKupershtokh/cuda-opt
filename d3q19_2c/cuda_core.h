@@ -1,0 +1,21 @@
+#ifndef CUDA_CORE_H_
+#define CUDA_CORE_H_
+
+#include <mp/mp.h>
+#include <mp/lb3d.h>
+#include <mp/h_array3d.h>
+
+extern "C" MP_EXPORT int Nx;
+extern "C" MP_EXPORT int Ny;
+extern "C" MP_EXPORT int Nz;
+
+extern "C" MP_EXPORT LBE_T G, gx, gy, T1, T2;
+extern "C" MP_EXPORT float LBE_elapsedTime;
+
+extern "C" MP_EXPORT h_Array3d<LBE_T> rho, rho3d1, rho3d2, ux1, uy1, uz1, ux2, uy2, uz2;
+
+
+extern "C" MP_EXPORT void init();
+extern "C" MP_EXPORT void cuda_calc();
+
+#endif

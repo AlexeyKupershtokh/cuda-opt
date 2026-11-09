@@ -1,0 +1,56 @@
+Job Id: 688340.hpc-suvir1.hpc.nusc.ru
+    Job_Name = submit.sh
+    Job_Owner = erpruuel@hpc-suvir2.hpc.nusc.ru
+    resources_used.cpupercent = 0
+    resources_used.cput = 00:00:00
+    resources_used.mem = 3780kb
+    resources_used.ncpus = 1
+    resources_used.vmem = 58268kb
+    resources_used.walltime = 00:00:00
+    job_state = R
+    queue = teslaq
+    server = hpc-suvir1.hpc.nusc.ru
+    Checkpoint = u
+    ctime = Fri Mar  2 21:56:35 2012
+    Error_Path = hpc-suvir2.hpc.nusc.ru:/mnt/storage/home/erpruuel/project/cup-
+	0.204/laplas3d/submit.sh.e688340
+    exec_host = sl001/0*0
+    exec_vnode = (sl001[1]:ncpus=1:mem=2048000kb:ngpus=1+sl001[0]:ngpus=1+sl001
+	[2]:ngpus=1)
+    Hold_Types = n
+    Join_Path = n
+    Keep_Files = n
+    Mail_Points = n
+    mtime = Fri Mar  2 21:56:36 2012
+    Output_Path = hpc-suvir2.hpc.nusc.ru:/mnt/storage/home/erpruuel/project/cup
+	-0.204/laplas3d/submit.sh.o688340
+    Priority = 0
+    qtime = Fri Mar  2 21:56:35 2012
+    Rerunable = False
+    Resource_List.mem = 2000mb
+    Resource_List.ncpus = 1
+    Resource_List.ngpus = 3
+    Resource_List.nodect = 1
+    Resource_List.place = pack:excl
+    Resource_List.qlist = teslaq
+    Resource_List.select = 1:ngpus=3
+    Resource_List.walltime = 01:00:00
+    stime = Fri Mar  2 21:56:36 2012
+    session_id = 5336
+    substate = 42
+    Variable_List = PBS_O_SYSTEM=Linux,PBS_O_SHELL=/bin/bash,
+	PBS_O_HOME=/mnt/storage/home/erpruuel,PBS_O_LOGNAME=erpruuel,
+	PBS_O_WORKDIR=/mnt/storage/home/erpruuel/project/cup-0.204/laplas3d,
+	PBS_O_LANG=ru_RU.utf8,
+	PBS_O_PATH=/opt/shared/nvidia/cuda/bin:/mnt/storage/home/erpruuel/bin:
+	/usr/local/bin:/usr/bin:/bin:/usr/bin/X11:/usr/X11R6/bin:/usr/games:/op
+	t/bin:/opt/kde3/bin:/opt/shared/pbs/default/bin:/usr/lib/mit/bin:/usr/l
+	ib/mit/sbin:/opt/shared/bin:/opt/gnome/bin,
+	PBS_O_MAIL=/var/mail/erpruuel,PBS_O_QUEUE=teslaq,
+	PBS_O_HOST=hpc-suvir2.hpc.nusc.ru
+    comment = Job run at Fri Mar 02 at 21:56 on (sl001[1]:ncpus=1:mem=2048000kb
+	:ngpus=1+sl001[0]:ngpus=1+sl001[2]:ngpus=1)
+    etime = Fri Mar  2 21:56:35 2012
+    Submit_arguments = ./submit.sh
+    pset = nodetype=""
+

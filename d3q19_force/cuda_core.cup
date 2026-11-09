@@ -1,0 +1,86 @@
+#include <mp/mp.h>
+#include <mp/lb3d.h>
+#include <mp/d_lb3d.h>
+
+#include "cuda_core.h"
+
+int Nx=256*2;
+int Ny=256*2;
+int Nz=3;
+//int Nz=256+128+64+32;
+
+LBE_T T=0.3;
+float LBE_elapsedTime;
+
+int a[1]={0};
+MP_Parallel MP_parallel(a, 1);
+
+d_LB3d *lbp;// (Nx, Ny, Nz);
+d_Array3d<LBE_T> *fxp;   // Массив сил fx
+d_Array3d<LBE_T> *fyp;   // Массив сил fy
+d_Array3d<LBE_T> *fzp;   // Массив сил fz
+
+h_Array3d<LBE_T> rho(Nx,Ny,Nz), ux(Nx,Ny,Nz), uy(Nx, Ny, Nz), uz(Nx, Ny, Nz);
+
+CUP INSERT core
+
+void init(){
+    lbp=new d_LB3d(Nx, Ny, Nz);
+    fxp=new d_Array3d<LBE_T>(Nx, Ny, Nz);
+	fyp=new d_Array3d<LBE_T>(Nx, Ny, Nz);
+	fzp=new d_Array3d<LBE_T>(Nx, Ny, Nz);
+	
+    d_LB3d &lb=*lbp;
+    setrhou(lb, 1.0, 0.0, 0.0, 0.0);
+    rhou2f(lb);
+}
+
+void cuda_calc(){
+    d_LB3d &lb=*lbp;
+	d_Array3d<LBE_T> fx=*fxp;
+	d_Array3d<LBE_T> fy=*fyp;
+	d_Array3d<LBE_T> fz=*fzp;
+
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
+    int NN=10;
+    for(int i=0; i<NN; i++){
+		transfer(lb);
+		f2rhou(lb);
+		relax(lb, 0.6);
+		sync(lb);
+		periodicz(lb); periodicx(lb); periodicy(lb);
+	
+		// Вычисление сил 
+		CUP FORALL_3D rho lb.rho fx fx # 
+		    fx[ind]=0.001*rho[ind]; 
+			fy[ind]=0.0; 
+			fz[ind]=0.0; 
+		#
+		force(lb, fx, fy, fz);
+		sync(lb);
+		periodicx(lb); 
+		CUP FORALL_3DXY lb lb GPU_UP MP_parallel.GPU_pool.size()-1 #
+			if (gpuIdx==0)      set_value(lb, ind,                       lb.rho[ind], 0.0, 0.0, 0.0);
+			if (gpuIdx==GPU_UP) set_value(lb, ind+lb.Nx*lb.Ny*(lb.Nz-1), lb.rho[ind+lb.Nx*lb.Ny*(lb.Nz-1)], 0.0, 0.0, 0.0);
+		#
+		CUP FORALL_3DXZ lb lb #
+			set_value(lb, ind,                       lb.rho[ind], 0.0, 0.0, 0.0);
+			set_value(lb, ind+lb.Nx*(lb.Ny-1), lb.rho[ind+lb.Nx*(lb.Ny-1)], 0.0, 0.0, 0.0);
+		#
+	}
+
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    float elapsedTime_;
+    cudaEventElapsedTime(&elapsedTime_, start, stop);
+
+    LBE_elapsedTime=elapsedTime_/(Nx*Ny*Nz*NN)*LBE_ncores*LBE_gpuf*1e-3;
+ 
+    cpy(rho, lb.rho);
+    cpy(ux, lb.ux);
+    cpy(uy, lb.uy);
+    cpy(uz, lb.uz);
+}

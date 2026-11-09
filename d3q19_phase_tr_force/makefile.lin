@@ -1,0 +1,32 @@
+CXX         =g++
+PREFIX      =/usr/local
+ARCH        =
+OPTIM       =-O3
+LIBS_MPPG   =-lmppg -lfltk -lXext -lXft
+LIBS_ADD    = -ltiff -lX11 -lpthread
+CXXFLAGS    =$(OPTIM) -DTIFF_SUPPORT -DPOSIX__ -DLINUX -I$(PREFIX)/include -I../
+LDFLAGS	    =-L ./ -L/usr/X11R6/lib -L$(PREFIX)/lib $(LIBS_MPPG) $(LIBS_ADD)
+EXT         =
+
+ALL=mppg_hello 
+all: $(ALL) 
+all_execute =$(addsuffix $(EXT), $(ALL))
+clean_easy:
+	rm -f *.o
+
+clean:
+	rm -f tmp.o $(all_execute) *.tif *.png *.eps
+
+#%.cu: %.cup
+#	./cup $< $@ 
+
+#%.cuph: %.h
+#	cup $< $@ 
+
+
+%: %.cpp cuda_core.cup
+	./cup cuda_core.cup cuda_core.cu
+	nvcc --shared -O3  -arch=sm_20 -I../ -Xcompiler -Wall,-W,-fPIC -o cuda_core.so cuda_core.cu 
+	$(CXX) -c $< $(CXXFLAGS) -I /usr/local/cuda/include  -o tmp.o
+	$(CXX) tmp.o cuda_core.so  -mwindows -L /usr/local/cuda/lib64 $(LDFLAGS) -lcudart -s -o $@
+

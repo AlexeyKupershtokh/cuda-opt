@@ -1,0 +1,3 @@
+#!/bin/sh
+awk -f ../cup2include.awk $1 > qwert.qwert
+awk -f ../cup2cu.awk $1 > $2

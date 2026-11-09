@@ -1,0 +1,19 @@
+Nx 128
+Ny 128
+Nz 8
+
+betta 0.001
+G -0.005
+gx 0.0
+gy 5e-5
+tau 0.55
+rho1 rect_corner 0 0 0 1 1 1 1.1
+rho2 rect_corner 0 0 0 1 1 1 1.1
+T1 1.0
+T2 0.9
+
+#rho sphere x0 y0 z0 R0 value
+#array rect x0 y0 z0 rx ry rz value
+#array rect_corner x1 y1 z1 x2 y2 z2 value
+
+#mp_parallel 0
