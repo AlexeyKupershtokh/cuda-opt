@@ -34,3 +34,12 @@ The check covers all four macroscopic fields at 200, 1000 and 5000 iterations. A
 On RTX 3070 with CUDA 12.6, the final FP64 checkpoint run measured 1.047 ms/step for periodic and 0.375 ms/step for walls. The paired corrected archive reference measured 2.732 and 2.009 ms/step. All four fields matched bitwise at 200, 1000 and 5000 steps.
 
 Additional FP64 checks matched bitwise after 100 steps on a 64×32×7 wall lattice, a 35×19×5 wall lattice, and two logical Z slabs sharing one GPU. The last check exercises decomposition and halo ordering on the available RTX 3070.
+
+On `lossy`, `LBE_T` and the lattice constants use FP32. This also changes the public fields and scalar parameters to `float`. Rebuild callers against `cuda_core.h`. Use a separate FP64 reference build and pass `--fp32` to the checker.
+
+The paired RTX 3070 run measured these device times and relative L2 density errors against the parent `lossless` FP64 implementation, which is bitwise equal to the corrected archive.
+
+| Example | FP64 ms/step | FP32 ms/step | Speedup | Error at 200 steps | Error at 1000 steps | Error at 5000 steps |
+|---|---:|---:|---:|---:|---:|---:|
+| Periodic | 1.044 | 0.272 | 3.84× | 0.000595% | 0.0472% | 0.4746% |
+| Walls | 0.377 | 0.094 | 4.02× | 0.000701% | 0.0494% | 0.2252% |
