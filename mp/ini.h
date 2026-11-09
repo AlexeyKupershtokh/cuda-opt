@@ -88,12 +88,12 @@ dim3 grid(array.Nx/threads.x, array.Ny/threads.y, ((array.Nz-2)/MP_parallel.GPU_
 cudaStream_t s[4];
 for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
 cudaSetDevice(MP_parallel.GPU_pool[i]);
-cudaStreamCreate(&s[i]);
+s[i] = 0;
 CUP_3D_8_0<<<grid, threads, 0, s[i]>>>(i, split(i, array), split(i, value), split(i, nx1*array.Nx), split(i, ny1*array.Ny), split(i, nz1*array.Nz), split(i, nx2*array.Nx), split(i, ny2*array.Ny), split(i, nz2*array.Nz));
 }
 for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
 cudaSetDevice(MP_parallel.GPU_pool[i]);
-cudaStreamDestroy(s[i]);
+
 }
 }
 
@@ -110,12 +110,12 @@ dim3 grid(array.Nx/threads.x, array.Ny/threads.y, ((array.Nz-2)/MP_parallel.GPU_
 cudaStream_t s[4];
 for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
 cudaSetDevice(MP_parallel.GPU_pool[i]);
-cudaStreamCreate(&s[i]);
+s[i] = 0;
 CUP_3D_8_1<<<grid, threads, 0, s[i]>>>(i, split(i, array), split(i, value), split(i, nx0*array.Nx), split(i, ny0*array.Ny), split(i, nz0*array.Nz), split(i, rx*array.Nx), split(i, ry*array.Ny), split(i, rz*array.Nz));
 }
 for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
 cudaSetDevice(MP_parallel.GPU_pool[i]);
-cudaStreamDestroy(s[i]);
+
 }
 }
 
@@ -132,12 +132,12 @@ dim3 grid(array.Nx/threads.x, array.Ny/threads.y, ((array.Nz-2)/MP_parallel.GPU_
 cudaStream_t s[4];
 for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
 cudaSetDevice(MP_parallel.GPU_pool[i]);
-cudaStreamCreate(&s[i]);
+s[i] = 0;
 CUP_3D_6_2<<<grid, threads, 0, s[i]>>>(i, split(i, array), split(i, value), split(i, R0*array.Nx), split(i, nx0*array.Nx), split(i, ny0*array.Ny), split(i, nz0*array.Nz));
 }
 for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
 cudaSetDevice(MP_parallel.GPU_pool[i]);
-cudaStreamDestroy(s[i]);
+
 }
 }
 
