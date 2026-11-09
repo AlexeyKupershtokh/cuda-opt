@@ -188,15 +188,15 @@ private:
     bool first = true;
 
     static dim3 blocks(Grid g) {
-        return dim3((g.nx-2+15)/16, std::min((g.ny-(Walls ? 0 : 2)+15)/16,65535), std::min(g.nz-2,65535));
+        return dim3((g.nx-2+31)/32, std::min((g.ny-(Walls ? 0 : 2)+3)/4,65535), std::min(g.nz-2,65535));
     }
     template<bool Flat> void launch_moments(Slab& s, LBE_T temperature, bool splitZ) {
-        moments<Walls,Flat><<<blocks(s.grid),dim3(16,16),0,s.stream>>>(
+        moments<Walls,Flat><<<blocks(s.grid),dim3(32,4),0,s.stream>>>(
             s.grid,s.banks[bank],s.fields,temperature,first,splitZ);
         check(cudaGetLastError(), "launch D3Q19 moments");
     }
     template<bool Flat> void launch_collision(Slab& s, LBE_T omega, LBE_T gx, LBE_T gy, bool splitZ) {
-        collide<Walls,Flat><<<blocks(s.grid),dim3(16,16),0,s.stream>>>(
+        collide<Walls,Flat><<<blocks(s.grid),dim3(32,4),0,s.stream>>>(
             s.grid,s.banks[bank],s.banks[bank^1],s.fields,omega,gx,gy,first,splitZ);
         check(cudaGetLastError(), "launch D3Q19 collision");
     }
