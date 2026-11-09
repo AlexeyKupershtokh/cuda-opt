@@ -119,6 +119,8 @@ cudaSetDevice(MP_parallel.GPU_pool[i]);
     cudaEventSynchronize(stop);
     float elapsedTime_;
     cudaEventElapsedTime(&elapsedTime_, start, stop);
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
 
     LBE_elapsedTime=elapsedTime_/(Nx*Ny*Nz*NN)*LBE_ncores*LBE_gpuf*1e-3;
  
