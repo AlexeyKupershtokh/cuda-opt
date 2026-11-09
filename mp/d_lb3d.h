@@ -1120,6 +1120,8 @@ cudaSetDevice(MP_parallel.GPU_pool[i]);
 }
 }
 
+#include <mp/phase_fast.cuh>
+
 void transfer(d_LB3d &lb){
 {
 dim3 threads(MP_parallel.Nx, MP_parallel.Ny, MP_parallel.Nz);
@@ -1472,6 +1474,7 @@ cudaSetDevice(MP_parallel.GPU_pool[i]);
 }	
 
 void periodicz(d_LB3d & lb){
+    if (phase_periodicz(lb)) return;
 	periodicz(lb.rho);
 	periodicz(lb.ux);
 	periodicz(lb.uy);
