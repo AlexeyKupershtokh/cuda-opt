@@ -103,7 +103,7 @@ void cuda_calc(){
     for(int i=0; i<NN; i++){
 		transfer(lb);
 		f2rhou(lb);
-		relax(lb, 0.6);
+		relax(lb, tau);
 		sync(lb);
 		periodicz(lb); periodicx(lb); //periodicy(lb);
 {
