@@ -32,7 +32,7 @@ BEGIN{
 			print("cudaStream_t s[4];")
 			print("for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){");
 				print("cudaSetDevice(MP_parallel.GPU_pool[i]);");
-				print("cudaStreamCreate(&s[i]);")
+				print("s[i] = 0;")
 				printf("CUP_3D_"argc"_"pref""counter"<<<grid, threads, 0, s[i]>>>(i, split(i, "$4")");
 				for(i=6 ; i<=(argc*2+2) ; i+=2)	printf(", split(i, "$i")");
 				print(");");
@@ -41,7 +41,7 @@ BEGIN{
 			#printf("cudaThreadSynchronize();")
 			print("for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){");
 				print("cudaSetDevice(MP_parallel.GPU_pool[i]);");
-				print("cudaStreamDestroy(s[i]);")
+				print("")
 			print("}")
 		print("}")
 		removecode();
@@ -58,7 +58,7 @@ BEGIN{
 			print("cudaStream_t s[4];")
 			print("for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){");
 				print("cudaSetDevice(MP_parallel.GPU_pool[i]);");
-				print("cudaStreamCreate(&s[i]);")
+				print("s[i] = 0;")
 				printf("CUP_3DYZ_"argc"_"pref""counter"<<<grid, threads, 0, s[i]>>>(split(i, "$4")");
 				for(i=6 ; i<=(argc*2+2) ; i+=2)	printf(", split(i, "$i")");
 				print(");");
@@ -66,7 +66,7 @@ BEGIN{
 
 			print("for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){");
 				print("cudaSetDevice(MP_parallel.GPU_pool[i]);");
-				print("cudaStreamDestroy(s[i]);")
+				print("")
 			print("}")		
 		print("}")
 		removecode();
@@ -83,7 +83,7 @@ BEGIN{
 			print("cudaStream_t s[4];")
 			print("for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){");
 				print("cudaSetDevice(MP_parallel.GPU_pool[i]);");
-				print("cudaStreamCreate(&s[i]);")
+				print("s[i] = 0;")
 				printf("CUP_3DXZ_"argc"_"pref""counter"<<<grid, threads, 0, s[i]>>>(split(i, "$4")");
 				for(i=6 ; i<=(argc*2+2) ; i+=2)	printf(", split(i, "$i")");
 				print(");");
@@ -91,7 +91,7 @@ BEGIN{
 
 			print("for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){");
 				print("cudaSetDevice(MP_parallel.GPU_pool[i]);");
-				print("cudaStreamDestroy(s[i]);")
+				print("")
 			print("}")		
 		print("}")
 		removecode();
@@ -108,7 +108,7 @@ BEGIN{
 			print("cudaStream_t s[4];")
 			print("for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){");
 				print("cudaSetDevice(MP_parallel.GPU_pool[i]);");
-				print("cudaStreamCreate(&s[i]);")
+				print("s[i] = 0;")
 				printf("CUP_3DXY_"argc"_"pref""counter"<<<grid, threads, 0, s[i]>>>(i, split(i, "$4")");
 				for(i=6 ; i<=(argc*2+2) ; i+=2)	printf(", split(i, "$i")");
 				print(");");
@@ -116,7 +116,7 @@ BEGIN{
 
 			print("for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){");
 				print("cudaSetDevice(MP_parallel.GPU_pool[i]);");
-				print("cudaStreamDestroy(s[i]);");
+				print("");
 			print("}")
 		print("}")
 		removecode();

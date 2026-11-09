@@ -1,94 +1,28 @@
-#include <mp/mp.h>
-#include <mp/lb3d.h>
-#include <mp/d_lb3d.h>
-#include <mp/ini.h>
-
 #include "cuda_core.h"
+#include <mp/ini.h>
+#include <mp/phase_solver.cuh>
 
-const char * fnameini="./ini";
-const MP_Parallel MP_parallel=ini_read<MP_Parallel>(fnameini, "mp_parallel");
-int Nx=ini_read<int>(fnameini, "Nx", 1024);
-int Ny=ini_read<int>(fnameini, "Ny", 16);
-int Nz=ini_read<int>(fnameini, "Nz", 6);
-LBE_T tau=ini_read<LBE_T>(fnameini, "tau", 0.55);
-LBE_T   T=ini_read<LBE_T>(fnameini, "T", 0.85);
-LBE_T   gy=ini_read<LBE_T>(fnameini, "gy", 5e-6);
-LBE_T   gx=ini_read<LBE_T>(fnameini, "gx", 0.0);
-
+const char* fnameini = "./ini";
+const MP_Parallel MP_parallel = ini_read<MP_Parallel>(fnameini,"mp_parallel");
+int Nx = ini_read<int>(fnameini,"Nx",1024);
+int Ny = ini_read<int>(fnameini,"Ny",16);
+int Nz = ini_read<int>(fnameini,"Nz",6);
+LBE_T tau = ini_read<LBE_T>(fnameini,"tau",0.55);
+LBE_T T = ini_read<LBE_T>(fnameini,"T",0.85);
+LBE_T gy = ini_read<LBE_T>(fnameini,"gy",5e-6);
+LBE_T gx = ini_read<LBE_T>(fnameini,"gx",0.0);
 float LBE_elapsedTime;
+h_Array3d<LBE_T> rho(Nx,Ny,Nz), ux(Nx,Ny,Nz), uy(Nx,Ny,Nz), uz(Nx,Ny,Nz);
 
-__device__ double p_rho(LBE_T rho, LBE_T T){
-    return 8*T*rho/(3-rho)-3*rho*rho;
+static phase::Solver<true> solver;
+
+void init() {
+    solver.reset(Nx,Ny,Nz,MP_parallel);
 }
 
-__device__ LBE_T drand(int s){
-	for (int i=0; i<100; i++)
-		s=(s*s)%(101*127);
-	return s/(101.0*127.0);
-}
-
-d_LB3d lb(Nx, Ny, Nz);
-d_Array3d<LBE_T> psi(Nx, Ny, Nz);   // Массив для вычисления сил
-d_Array3d<LBE_T> fx(Nx, Ny, Nz), fy(Nx, Ny, Nz), fz(Nx, Ny, Nz);  
-
-h_Array3d<LBE_T> rho(Nx,Ny,Nz), ux(Nx,Ny,Nz), uy(Nx, Ny, Nz), uz(Nx, Ny, Nz);
-
-CUP INSERT core
-
-void init(){
-    setrhou(lb, 1.0, 0.0, 0.0, 0.0);
-
-    CUP FORALL_3D_IJK lb lb Nz lb.Nz # 
-	int k1=ind+gpuIdx*lb.Nz;
-	lb.rho[ind]=0.8 + (drand(k1)-0.5)*0.2;
-    #
-    rhou2f(lb);
-}
-
-void cuda_calc(){
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    cudaEventRecord(start, 0);
-    int NN=10;
-    for(int i=0; i<NN; i++){
-		transfer(lb);
-		f2rhou(lb);
-		relax(lb, 0.6);
-		sync(lb);
-		periodicz(lb); periodicx(lb); //periodicy(lb);
-		CUP FORALL_3DXZ lb lb Nxy lb.Nx*(lb.Ny-1) #
-			set_value(lb, ind, lb.rho[ind+lb.Nx], 0.0, 0.0, 0.0);
-			set_value(lb, ind+Nxy, lb.rho[ind+Nxy-lb.Nx], 0.0, 0.0, 0.0);
-		#
-	
-		// Вычисление сил для уравнения состояния
-		CUP FORALL_3D rho lb.rho psi psi fx fx fy fy fz fz gx gx gy gy T T # 
-		    psi[ind]=sqrt(fabs(rho[ind]/3.0-0.02*p_rho(rho[ind], T))); 
-		    fx[ind]=gx;
-			fy[ind]=gy*rho[ind];
-			fz[ind]=0.0; 
-		#
-		psi2force(fx, fy, fz, psi);
-		force(lb, fx, fy, fz);
-		sync(lb);
-		periodicz(lb); periodicx(lb); // periodicy(lb);
-		CUP FORALL_3DXZ lb lb Nxy lb.Nx*(lb.Ny-1) #
-			set_value(lb, ind, lb.rho[ind+lb.Nx], 0.0, 0.0, 0.0);
-			set_value(lb, ind+Nxy, lb.rho[ind+Nxy-lb.Ny], 0.0, 0.0, 0.0);
-		#
-	
-    }
-
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    float elapsedTime_;
-    cudaEventElapsedTime(&elapsedTime_, start, stop);
-
-    LBE_elapsedTime=elapsedTime_/(Nx*Ny*Nz*NN)*LBE_ncores*LBE_gpuf*1e-3;
- 
-    cpy(rho, lb.rho);
-    cpy(ux, lb.ux);
-    cpy(uy, lb.uy);
-    cpy(uz, lb.uz);
+void cuda_calc() {
+    const int steps = 10;
+    const float ms = solver.advance(steps,tau,T,gx,gy);
+    LBE_elapsedTime = phase::legacy_ticks(ms,Nx,Ny,Nz,steps);
+    solver.download(rho,ux,uy,uz);
 }

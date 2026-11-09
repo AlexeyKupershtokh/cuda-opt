@@ -158,12 +158,12 @@ dim3 grid(a.Ny/threads.x, ((a.Nz-2)/MP_parallel.GPU_pool.size()+2)/threads.y);
 cudaStream_t s[4];
 for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
 cudaSetDevice(MP_parallel.GPU_pool[i]);
-cudaStreamCreate(&s[i]);
+s[i] = 0;
 CUP_3DYZ_1_d_array0<<<grid, threads, 0, s[i]>>>(split(i, a));
 }
 for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
 cudaSetDevice(MP_parallel.GPU_pool[i]);
-cudaStreamDestroy(s[i]);
+
 }
 }
 
@@ -180,12 +180,12 @@ dim3 grid(a.Nx/threads.x, ((a.Nz-2)/MP_parallel.GPU_pool.size()+2)/threads.y);
 cudaStream_t s[4];
 for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
 cudaSetDevice(MP_parallel.GPU_pool[i]);
-cudaStreamCreate(&s[i]);
+s[i] = 0;
 CUP_3DXZ_1_d_array1<<<grid, threads, 0, s[i]>>>(split(i, a));
 }
 for(size_t i=0; i<MP_parallel.GPU_pool.size(); i++){
 cudaSetDevice(MP_parallel.GPU_pool[i]);
-cudaStreamDestroy(s[i]);
+
 }
 }
 

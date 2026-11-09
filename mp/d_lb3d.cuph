@@ -248,7 +248,10 @@ void rhou2f(d_LB3d & lb){
 	CUP FORALL_3D f lb.f4d rho lb.rho ux lb.ux uy lb.uy uz lb.uz # f[ind]=LBE_f18(rho[ind], ux[ind], uy[ind], uz[ind], ux[ind]*ux[ind]+uy[ind]*uy[ind]+uz[ind]*uz[ind]); #
 }
 
+#include <mp/phase_fast.cuh>
+
 void transfer(d_LB3d &lb){
+    if (phase_transfer(lb)) return;
 	CUP FORALL_3D_IJK  ftmp lb.ftmp f lb.f1 # if (i==0) {ftmp[ind]=f[ind];} else {ftmp[ind]=f[ind-1];} #
 	swap(lb.ftmp, lb.f1);
 
@@ -340,6 +343,7 @@ void periodicy(d_LB3d & lb){
 }	
 
 void periodicz(d_LB3d & lb){
+    if (phase_periodicz(lb)) return;
 	periodicz(lb.rho);
 	periodicz(lb.ux);
 	periodicz(lb.uy);
